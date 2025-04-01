@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using Roomify.GP.Core.DTOs.ApplicationUser;
 using Roomify.GP.Core.DTOs.PortfolioPost;
 using Roomify.GP.Core.DTOs.User;
 using Roomify.GP.Core.Entities;
+using Roomify.GP.Core.Entities.Identity;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Roomify.GP.Service.Mappings
@@ -10,9 +12,9 @@ namespace Roomify.GP.Service.Mappings
     {
         public AutoMapperProfile()
         {
-            CreateMap<User, UserResponseDto>().ReverseMap();
-            CreateMap<UserCreateDto, User>();
-            CreateMap<UserUpdateDto, User>();
+            CreateMap<ApplicationUser, UserResponseDto>().ReverseMap();
+            CreateMap<UserCreateDto, ApplicationUser>();
+            CreateMap<UserUpdateDto, ApplicationUser>();
 
             CreateMap<PortfolioPostDto, PortfolioPost>()
             .ForMember(dest => dest.ImagePath, options => options.Ignore())

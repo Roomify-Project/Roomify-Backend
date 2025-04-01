@@ -1,5 +1,6 @@
 ﻿using MailKit.Security;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using MimeKit;
 using Roomify.GP.Core.Service.Contract;
 using Roomify.GP.Core.Settings;
@@ -9,26 +10,26 @@ namespace Roomify.GP.Service.Services
 {
     public class EmailService : IEmailService
     {
-        private readonly EmailSettings _emailSettings;
+        private readonly MailSettings _mailSettings;
 
-        public EmailService(IConfiguration configuration)
+        public EmailService(IOptions<MailSettings> mailSettings)
         {
-            _emailSettings = configuration.GetSection("EmailSettings").Get<EmailSettings>();
+            _mailSettings = mailSettings.Value;
         }
 
-        public async Task SendEmailAsync(string toEmail, string subject, string body)
+        public async Task SendEmailAsync(string to, string subject, string body)
         {
             var email = new MimeMessage();
-            email.From.Add(MailboxAddress.Parse(_emailSettings.Sender));
-            email.To.Add(MailboxAddress.Parse(toEmail));
+            email.Sender = MailboxAddress.Parse(_mailSettings.From);
+            email.To.Add(MailboxAddress.Parse(to));
             email.Subject = subject;
 
             var builder = new BodyBuilder { HtmlBody = body };
             email.Body = builder.ToMessageBody();
 
             using var smtp = new SmtpClient();
-            await smtp.ConnectAsync(_emailSettings.Host, _emailSettings.Port, SecureSocketOptions.StartTls);
-            await smtp.AuthenticateAsync(_emailSettings.Username, _emailSettings.Password);
+            await smtp.ConnectAsync(_mailSettings.SmtpHost, _mailSettings.SmtpPort, SecureSocketOptions.StartTls);
+            await smtp.AuthenticateAsync(_mailSettings.Username, _mailSettings.Password);
             await smtp.SendAsync(email);
             await smtp.DisconnectAsync(true);
         }
