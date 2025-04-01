@@ -1,14 +1,14 @@
-﻿using AutoMapper;
-using Roomify.GP.Core.DTOs.User;
-using Roomify.GP.Core.Entities;
+﻿using Roomify.GP.Core.DTOs.ApplicationUser;
+using Roomify.GP.Core.Entities.Identity;
 using Roomify.GP.Core.Repositories.Contract;
-using Roomify.GP.Core.Services.Contract;
-using Roomify.GP.Service.Helpers;
+using Roomify.GP.Core.Service.Contract;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AutoMapper;
+using Roomify.GP.Core.Services.Contract;
 
-namespace Roomify.GP.Service.Services
+namespace Roomify.GP.Service
 {
     public class UserService : IUserService
     {
@@ -21,49 +21,31 @@ namespace Roomify.GP.Service.Services
             _mapper = mapper;
         }
 
-        public async Task<UserResponseDto> GetUserByIdAsync(Guid id)
+        public async Task<IEnumerable<ApplicationUser>> GetAllUsersAsync()
+        {
+            return await _userRepository.GetAllUsersAsync();
+        }
+
+        public async Task<ApplicationUser> GetUserByIdAsync(Guid id)
+        {
+            return await _userRepository.GetUserByIdAsync(id);
+        }
+
+        public async Task<ApplicationUser> UpdateUserAsync(Guid id, UserUpdateDto dto)
         {
             var user = await _userRepository.GetUserByIdAsync(id);
-            return _mapper.Map<UserResponseDto>(user);
-        }
+            if (user == null)
+                return null;
 
-        public async Task<IEnumerable<UserResponseDto>> GetAllUsersAsync()
-        {
-            var users = await _userRepository.GetAllUsersAsync();
-            return _mapper.Map<IEnumerable<UserResponseDto>>(users);
-        }
-
-        public async Task<UserResponseDto> CreateUserAsync(UserCreateDto userDto)
-        {
-            // Check if email already exists
-            var existingUser = await _userRepository.GetUserByEmailAsync(userDto.Email);
-            if (existingUser != null)
-            {
-                // Return null or throw an exception 
-                throw new Exception("This email is already registered.");
-            }
-
-            // Proceed to create user
-            var user = _mapper.Map<User>(userDto);
-            user.Password = PasswordHasher.HashPassword(user.Password);
-            await _userRepository.AddUserAsync(user);
-            return _mapper.Map<UserResponseDto>(user);
-        }
-
-        public async Task<bool> UpdateUserAsync(Guid id, UserUpdateDto userDto)
-        {
-            var user = await _userRepository.GetUserByIdAsync(id);
-            if (user == null) return false;
-
-            _mapper.Map(userDto, user);
+            _mapper.Map(dto, user);
             await _userRepository.UpdateUserAsync(user);
-            return true;
+            return user;
         }
 
         public async Task<bool> DeleteUserAsync(Guid id)
         {
-            if (!await _userRepository.UserExistsAsync(id)) return false;
-
+            var user = await _userRepository.GetUserByIdAsync(id);
+            if (user == null) return false;
             await _userRepository.DeleteUserAsync(id);
             return true;
         }

@@ -1,13 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Roomify.GP.Core.DTOs.User;
-using Roomify.GP.Core.Repositories.Contract;
-using Roomify.GP.Core.Services.Contract;
-using Roomify.GP.Service.Helpers;
-
-
+using Roomify.GP.Core.DTOs.ApplicationUser;
 using Roomify.GP.Core.Service.Contract;
-
-
 
 namespace Roomify.GP.API.Controllers
 {
@@ -15,90 +8,52 @@ namespace Roomify.GP.API.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly IUserService _userService;
-        private readonly IUserRepository _userRepository;
         private readonly IAuthService _authService;
-        private readonly IJwtService _jwtService;
 
-        public AuthController(IUserService userService, IUserRepository userRepository, IJwtService jwtService, IAuthService authService)
+        public AuthController(IAuthService authService)
         {
-            _userService = userService;
-            _userRepository = userRepository;
-            _jwtService = jwtService;
             _authService = authService;
         }
 
-
-
-      
-
         [HttpPost("register")]
-        public async Task<IActionResult> Register(UserCreateDto userDto)
+        public async Task<IActionResult> Register([FromBody] UserCreateDto dto)
         {
-            var user = await _userService.CreateUserAsync(userDto);
-            return Ok(user);
+            var result = await _authService.RegisterAsync(dto);
+            return Ok(result);
         }
+
+
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailDto dto)
+        {
+            var result = await _authService.ConfirmEmailAsync(dto.Email, dto.OtpCode);
+            if (!result)
+                return BadRequest("Invalid or expired code.");
+
+            return Ok("Email confirmed successfully.");
+        }
+
 
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDto loginDto)
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var user = await _userRepository.GetUserByEmailAsync(loginDto.Email);
-
-            if (user == null || user.Password != PasswordHasher.HashPassword(loginDto.Password))
-                return Unauthorized("Invalid email or password");
-
-            var token = _jwtService.GenerateToken(user);
-
-            var response = new LoginResponseDto
-
-            {
-                Token = token,
-                UserName = user.UserName,
-                Roles = user.Roles.ToString()
-            };
-
-            return Ok(response);
-        }
-      
-
-        [HttpPost("google-login")]
-        public async Task<IActionResult> GoogleLogin([FromBody] ExternalAuthDto externalAuth)
-        {
-            if (externalAuth == null || externalAuth.Provider != "Google")
-                return BadRequest("Invalid request");
-
-            var user = await _authService.VerifyGoogleTokenAsync(externalAuth);
-            if (user == null)
-                return Unauthorized("Invalid Google Token");
-
-            var token = _authService.GenerateJwtToken(user);
-
-            var response = new LoginResponseDto
-            {
-                UserName = user.UserName,
-                Roles = user.Roles.ToString(),
-                Token = token
-            };
-
-            return Ok(response);
+            var result = await _authService.LoginAsync(dto);
+            return Ok(result);
         }
 
-
-        [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword([FromBody] ForgetPasswordRequest request)
+        [HttpPost("forget-password")]
+        public async Task<IActionResult> ForgetPassword([FromBody] ForgetPasswordRequestDto request)
         {
-            await _authService.ForgetPasswordAsync(request);
-            return Ok(new { message = "Reset link sent to email successfully." });
+            var success = await _authService.ForgetPasswordAsync(request);
+            return success ? Ok("Reset link sent.") : NotFound("User not found");
         }
-
 
         [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto request)
         {
-            await _authService.ResetPasswordAsync(request);
-            return Ok(new { message = "Password reset successfully." });
+            var success = await _authService.ResetPasswordAsync(request);
+            return success ? Ok("Password reset successfully.") : BadRequest("Invalid token or user.");
         }
-
     }
 }

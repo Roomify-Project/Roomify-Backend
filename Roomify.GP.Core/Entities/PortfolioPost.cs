@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Roomify.GP.Core.Entities.Identity;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,7 +17,7 @@ namespace Roomify.GP.Core.Entities
         public bool IsDeleted { get; set; }
 
         // FK
-        public Guid UserId { get; set; }
-        public required User User { get; set; }
+        public string UserId { get; set; }
+        public required ApplicationUser User { get; set; }
     }
 }

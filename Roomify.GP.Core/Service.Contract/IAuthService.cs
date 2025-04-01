@@ -1,15 +1,19 @@
-﻿using Roomify.GP.Core.DTOs.User;
-using Roomify.GP.Core.Entities;
-using System.Threading.Tasks;
+﻿using Roomify.GP.Core.DTOs.ApplicationUser;
+
+using Roomify.GP.Core.Entities.Identity;
+
 
 namespace Roomify.GP.Core.Service.Contract
 {
     public interface IAuthService
     {
-        Task<User?> VerifyGoogleTokenAsync(ExternalAuthDto externalAuth);
-        Task ForgetPasswordAsync(ForgetPasswordRequest request);
-        Task ResetPasswordAsync(ResetPasswordRequest request);
+        Task<LoginResponseDto> RegisterAsync(UserCreateDto dto);
+        Task<LoginResponseDto> LoginAsync(LoginDto dto);
+        string GenerateJwtToken(ApplicationUser user);
+        Task<bool> ForgetPasswordAsync(ForgetPasswordRequestDto request);
+        Task<bool> ConfirmEmailAsync(string email, string otpCode);
 
-        string GenerateJwtToken(User user);
+        Task<bool> ResetPasswordAsync(ResetPasswordRequestDto request);
+
     }
 }

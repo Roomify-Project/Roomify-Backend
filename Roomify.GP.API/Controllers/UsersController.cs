@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Roomify.GP.API.Errors;
-using Roomify.GP.Core.DTOs.User;
-using Roomify.GP.Core.Services.Contract;
+using Roomify.GP.Core.Service.Contract;
+using Roomify.GP.Core.DTOs.ApplicationUser;
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Roomify.GP.Core.Entities.Identity;
+using Roomify.GP.Core.Services.Contract;
 
 namespace Roomify.GP.API.Controllers
 {
@@ -18,9 +20,6 @@ namespace Roomify.GP.API.Controllers
             _userService = userService;
         }
 
-
-
-        [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
         {
@@ -28,36 +27,40 @@ namespace Roomify.GP.API.Controllers
             return Ok(users);
         }
 
-
-        [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetUser(Guid id)
+        [HttpGet("{id:guid}")]
+        [ProducesResponseType(typeof(ApplicationUser), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetUserById(Guid id)
         {
             var user = await _userService.GetUserByIdAsync(id);
-            return user != null ? Ok(user) : NotFound(new ApiErrorResponse(404));
+            return user is null ? NotFound() : Ok(user);
         }
 
-
-        [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(Guid id, UserUpdateDto userDto)
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> UpdateUser(Guid id, UserUpdateDto dto)
         {
-            var result = await _userService.UpdateUserAsync(id, userDto);
-            return result ? Ok(userDto) : NotFound(new ApiErrorResponse(404));
+            var user = await _userService.GetUserByIdAsync(id);
+            if (user == null) return NotFound();
+
+            if (!user.EmailConfirmed)
+                return BadRequest("Email not confirmed.");
+
+            var updated = await _userService.UpdateUserAsync(id, dto);
+            return updated == null ? NotFound() : Ok(updated);
         }
 
-
-        [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeleteUser(Guid id)
         {
-            if (id == null) return BadRequest(new ApiErrorResponse(400));
+            var user = await _userService.GetUserByIdAsync(id);
+            if (user == null) return NotFound();
+
+            if (!user.EmailConfirmed)
+                return BadRequest("Cannot delete user before confirming email.");
+
             var result = await _userService.DeleteUserAsync(id);
-            return result ? Ok("User Deleted Successfully") : NotFound(new ApiErrorResponse(404));
+            return result ? Ok("User deleted successfully") : NotFound();
         }
+
     }
 }
