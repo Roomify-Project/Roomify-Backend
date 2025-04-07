@@ -36,6 +36,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPortfolioPostRepository, PortfolioPostRepository>();
 builder.Services.AddScoped<IPortfolioPostService, PortfolioPostService>();
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IEmailConfirmationTokenRepository, EmailConfirmationTokenRepository>();
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
@@ -43,7 +44,6 @@ builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("JwtSettings"));
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
-Console.WriteLine($"🔍 JWT Loaded → SecretKey: {jwtSettings.SecretKey}");
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -62,18 +62,26 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Load appsettings.Local.json if exists
 builder.Configuration
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-    //JsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
 
 // Register Cloudinary
-builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
-builder.Services.AddSingleton(x =>
+//builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+builder.Services.AddSingleton(serviceProvider => 
 {
-    var config = builder.Configuration.GetSection("CloudinarySettings").Get<CloudinarySettings>();
-    var account = new Account(config.CloudName, config.ApiKey, config.ApiSecret);
+    var config = serviceProvider.GetRequiredService<IConfiguration>();
+    var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings").Get<CloudinarySettings>();
+
+    if (cloudinarySettings == null)
+    {
+        throw new Exception("Cloudinary settings are not configured properly.");
+    }
+
+    var account = new Account(cloudinarySettings.CloudName, cloudinarySettings.ApiKey, cloudinarySettings.ApiSecret);
     return new Cloudinary(account);
 });
+
 
 // Add Swagger (for API testing)
 builder.Services.AddEndpointsApiExplorer();
@@ -113,6 +121,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseRouting();
 app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseAuthentication();

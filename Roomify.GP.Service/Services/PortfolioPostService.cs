@@ -21,8 +21,7 @@ namespace Roomify.GP.Service.Services
         public async Task<IEnumerable<PortfolioPost>> GetAllAsync() => await _repo.GetAllAsync();
         public async Task<IEnumerable<PortfolioPost>> GetByUserIdAsync(Guid userId) => await _repo.GetByUserIdAsync(userId);
         public async Task<PortfolioPost> GetByIdAsync(Guid id) => await _repo.GetByIdAsync(id);
-        public async Task AddAsync(PortfolioPost post) => await _repo.AddAsync(post);
-        public async Task UpdateAsync(PortfolioPost post) => await _repo.UpdateAsync(post);
+        public async Task AddAsync(Guid userId, PortfolioPost post) => await _repo.AddAsync(userId, post);
         public async Task DeleteAsync(Guid id) => await _repo.DeleteAsync(id);
     }
 }

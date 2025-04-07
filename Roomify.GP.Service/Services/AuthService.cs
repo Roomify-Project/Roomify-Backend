@@ -10,7 +10,6 @@ using System.Text;
 using System;
 using System.Threading.Tasks;
 using Roomify.GP.Core.DTOs.ApplicationUser;
-using Roomify.GP.Core.Entities;
 using Roomify.GP.Core.Repositories.Contract;
 
 namespace Roomify.GP.Service
@@ -58,8 +57,27 @@ namespace Roomify.GP.Service
                 UserName = dto.UserName,
                 Email = dto.Email,
                 Bio = dto.Bio,
+                Roles = Enum.Parse<Roles>(dto.Roles),    // String to Enum conversion
                 CreatedDate = DateTime.UtcNow
             };
+
+            // Check if Roles is valid
+            if (Enum.TryParse<Roles>(dto.Roles, out var roleEnum))
+            {
+                user.Roles = roleEnum;
+            }
+            else
+            {
+                // To Handle invalid role input
+                throw new ArgumentException($"Invalid role: {dto.Roles}");
+            }
+
+            // Check if user already exists
+            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+            if (existingUser != null)
+                throw new ApplicationException("User already exists with this email.");
+
+
 
             var result = await _userManager.CreateAsync(user, dto.Password);
 
@@ -98,6 +116,7 @@ namespace Roomify.GP.Service
                 UserId = user.Id,
                 Email = user.Email,
                 UserName = user.UserName,
+                Roles = user.Roles.ToString(),
                 Token = token
             };
         }

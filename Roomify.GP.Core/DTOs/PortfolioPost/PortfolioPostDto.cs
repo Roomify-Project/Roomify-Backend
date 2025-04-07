@@ -9,7 +9,7 @@ namespace Roomify.GP.Core.DTOs.PortfolioPost
 {
     public class PortfolioPostDto
     {
-        public Guid UserId { get; set; }
+        public Guid ApplicationUserId { get; set; }
         public IFormFile ImageFile { get; set; }    // the uploaded file
         public string Description { get; set; }
     }

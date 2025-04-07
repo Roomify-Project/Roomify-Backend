@@ -20,19 +20,10 @@ namespace Roomify.GP.Service.Mappings
             .ForMember(dest => dest.ImagePath, options => options.Ignore())
             .ForMember(dest => dest.Id, options => options.Ignore())
             .ForMember(dest => dest.CreatedAt, options => options.Ignore())
-            .ForMember(dest => dest.User, options => options.Ignore());
+            .ForMember(dest => dest.ApplicationUser, options => options.Ignore());
 
             CreateMap<PortfolioPost, PortfolioPostResponseDto>();
 
-
-
-            CreateMap<PortfolioPostUpdateDto, PortfolioPost>()
-            .ForMember(dest => dest.ImagePath, options => options.Ignore())
-            .ForMember(dest => dest.Id, options => options.Ignore())
-            .ForMember(dest => dest.CreatedAt, options => options.Ignore())
-            .ForMember(dest => dest.UpdatedAt, options => options.Ignore())
-            .ForMember(dest => dest.User, options => options.Ignore())
-            .ForMember(dest => dest.UserId, options => options.Ignore());
         }
     }
 }

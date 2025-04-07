@@ -1,4 +1,6 @@
-﻿namespace Roomify.GP.Core.DTOs.ApplicationUser
+﻿using Roomify.GP.Core.Enums;
+
+namespace Roomify.GP.Core.DTOs.ApplicationUser
 
 {
     public class UserCreateDto
@@ -9,6 +11,7 @@
         public string Password { get; set; }
         public string? Bio { get; set; }
         public string? ProfilePicture { get; set; } = "default.jpg";
+        public string Roles { get; set; }
 
     }
 
