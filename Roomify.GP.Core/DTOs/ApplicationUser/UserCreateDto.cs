@@ -1,5 +1,4 @@
-﻿using Roomify.GP.Core.Enums;
-
+﻿
 namespace Roomify.GP.Core.DTOs.ApplicationUser
 
 {
