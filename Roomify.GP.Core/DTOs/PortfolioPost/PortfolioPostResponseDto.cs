@@ -12,6 +12,6 @@ namespace Roomify.GP.Core.DTOs.PortfolioPost
         public string ImagePath { get; set; }
         public string Description { get; set; }
         public DateTime CreatedAt { get; set; }
-        public Guid UserId { get; set; }
+        public Guid ApplicationUserId { get; set; }
     }
 }

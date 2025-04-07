@@ -4,14 +4,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Roomify.GP.Core.Enums
+namespace Roomify.GP.Core.Entities.AI.RoomImage
 {
     public enum RoomType
     {
         LivingRoom,
-        BedRoom,
+        Bedroom,
         Kitchen,
+        Bathroom,
         Office,
-        Bathroom
+        DiningRoom,
+        Hallway,
+        HomeLibrary,
+        StudyRoom,
+        GuestRoom
     }
 }

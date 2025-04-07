@@ -21,31 +21,23 @@ namespace Roomify.GP.Repository.Repositories
 
         public async Task<IEnumerable<PortfolioPost>> GetAllAsync()
         {
-            return await _context.PortfolioPosts.Include( P => P.User).ToListAsync();
+            return await _context.PortfolioPosts.Include( P => P.ApplicationUser).ToListAsync();
         }
 
         public async Task<IEnumerable<PortfolioPost>> GetByUserIdAsync(Guid userId)
         {
-            return await _context.PortfolioPosts
-     .Where(p => p.UserId == userId.ToString())
-     .ToListAsync();
+            return await _context.PortfolioPosts.Where(P => P.ApplicationUserId.ToString() == userId.ToString()).ToListAsync();
 
         }
 
         public async Task<PortfolioPost> GetByIdAsync(Guid id)
         {
-            return await _context.PortfolioPosts.Include(P => P.User).FirstOrDefaultAsync(P => P.Id == id);
+            return await _context.PortfolioPosts.Include(P => P.ApplicationUser).FirstOrDefaultAsync(P => P.Id == id);
         }
 
-        public async Task AddAsync(PortfolioPost post)
+        public async Task AddAsync(Guid userId, PortfolioPost post)
         {
             await _context.PortfolioPosts.AddAsync(post);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task UpdateAsync(PortfolioPost post)
-        {
-            _context.PortfolioPosts.Update(post);
             await _context.SaveChangesAsync();
         }
 

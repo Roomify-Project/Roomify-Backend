@@ -16,8 +16,9 @@ namespace Roomify.GP.Core.Entities
         public DateTime UpdatedAt { get; set; }
         public bool IsDeleted { get; set; }
 
+
         // FK
-        public string UserId { get; set; }
-        public required ApplicationUser User { get; set; }
+        public Guid ApplicationUserId { get; set; }
+        public required ApplicationUser ApplicationUser { get; set; }
     }
 }

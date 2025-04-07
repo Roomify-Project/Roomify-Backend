@@ -335,6 +335,12 @@ namespace Roomify.GP.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("ApplicationUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ApplicationUserId1")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -352,13 +358,9 @@ namespace Roomify.GP.Repository.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("ApplicationUserId1");
 
                     b.ToTable("PortfolioPosts");
                 });
@@ -479,13 +481,11 @@ namespace Roomify.GP.Repository.Migrations
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.PortfolioPost", b =>
                 {
-                    b.HasOne("Roomify.GP.Core.Entities.Identity.ApplicationUser", "User")
+                    b.HasOne("Roomify.GP.Core.Entities.Identity.ApplicationUser", "ApplicationUser")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ApplicationUserId1");
 
-                    b.Navigation("User");
+                    b.Navigation("ApplicationUser");
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.RoomImage", b =>

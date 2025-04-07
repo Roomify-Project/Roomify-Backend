@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Roomify.GP.Core.Entities;
+using Roomify.GP.Core.Entities.AI.RoomImage;
 using Roomify.GP.Core.Entities.Identity;
 
 namespace Roomify.GP.Repository.Data.Contexts

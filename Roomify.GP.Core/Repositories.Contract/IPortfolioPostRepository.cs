@@ -12,8 +12,7 @@ namespace Roomify.GP.Core.Repositories.Contract
         Task<IEnumerable<PortfolioPost>> GetAllAsync();
         Task<IEnumerable<PortfolioPost>> GetByUserIdAsync(Guid userId);
         Task<PortfolioPost> GetByIdAsync(Guid id);
-        Task AddAsync(PortfolioPost post);
-        Task UpdateAsync(PortfolioPost post);
+        Task AddAsync(Guid userId, PortfolioPost post);
         Task DeleteAsync(Guid id);
     }
 }
