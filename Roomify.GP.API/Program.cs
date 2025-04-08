@@ -17,6 +17,7 @@ using Roomify.GP.Core.Service.Contract;
 using Roomify.GP.Repository.Data.Contexts;
 using Roomify.GP.Service;
 using IJwtService = Roomify.GP.Service.Services.IJwtService;
+using Roomify.GP.API.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,10 +49,6 @@ var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSetting
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.AddScoped<IJwtService, JwtService>();
 
-
-
-
-
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
@@ -64,11 +61,11 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+builder.Services.AddScoped<MessageService>();
 
 
 // Register Cloudinary
-//builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
-builder.Services.AddSingleton(serviceProvider => 
+builder.Services.AddSingleton(serviceProvider =>
 {
     var config = serviceProvider.GetRequiredService<IConfiguration>();
     var cloudinarySettings = builder.Configuration.GetSection("CloudinarySettings").Get<CloudinarySettings>();
@@ -82,6 +79,8 @@ builder.Services.AddSingleton(serviceProvider =>
     return new Cloudinary(account);
 });
 
+// Add SignalR
+builder.Services.AddSignalR();
 
 // Add Swagger (for API testing)
 builder.Services.AddEndpointsApiExplorer();
@@ -114,6 +113,14 @@ catch (Exception ex)
 // Configure ApplicationUser-Defined Middleware
 app.UseMiddleware<ExceptionMiddleware>();
 
+// Configure CORS (Cross-Origin Resource Sharing)
+app.UseCors(builder =>
+{
+    builder.AllowAnyOrigin()  // السماح لجميع النطاقات
+           .AllowAnyMethod()  // السماح باستخدام أي طريقة (GET, POST, PUT, DELETE, ...)
+           .AllowAnyHeader(); // السماح باستخدام أي رأس (header)
+});
+
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
@@ -127,4 +134,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<PrivateChatHub>("/chat"); // ربط الـ SignalR Hub مع URL
+
 app.Run();

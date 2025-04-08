@@ -22,6 +22,34 @@ namespace Roomify.GP.Repository.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Message", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ReceiverId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Messages");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -155,27 +183,64 @@ namespace Roomify.GP.Repository.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Roomify.GP.Core.Entities.Description", b =>
+            modelBuilder.Entity("Roomify.GP.Core.Entities.AI.RoomImage.Description", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Box")
+                    b.Property<string>("DescriptionText")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("RoomImageId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("Style")
+                    b.Property<int>("RoomStyle")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoomType")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("RoomImageId");
+                    b.HasIndex("RoomImageId")
+                        .IsUnique();
 
                     b.ToTable("Descriptions");
+                });
+
+            modelBuilder.Entity("Roomify.GP.Core.Entities.AI.RoomImage.RoomImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<double>("Height")
+                        .HasColumnType("float");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("Length")
+                        .HasColumnType("float");
+
+                    b.Property<double>("Width")
+                        .HasColumnType("float");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.ToTable("RoomImages");
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.Identity.ApplicationUser", b =>
@@ -335,10 +400,8 @@ namespace Roomify.GP.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ApplicationUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ApplicationUserId1")
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -360,39 +423,9 @@ namespace Roomify.GP.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ApplicationUserId1");
+                    b.HasIndex("ApplicationUserId");
 
                     b.ToTable("PortfolioPosts");
-                });
-
-            modelBuilder.Entity("Roomify.GP.Core.Entities.RoomImage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<double>("Height")
-                        .HasColumnType("float");
-
-                    b.Property<string>("ImagePath")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("Length")
-                        .HasColumnType("float");
-
-                    b.Property<int>("RoomType")
-                        .HasColumnType("int");
-
-                    b.Property<double>("Width")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("RoomImages");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -446,15 +479,26 @@ namespace Roomify.GP.Repository.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Roomify.GP.Core.Entities.Description", b =>
+            modelBuilder.Entity("Roomify.GP.Core.Entities.AI.RoomImage.Description", b =>
                 {
-                    b.HasOne("Roomify.GP.Core.Entities.RoomImage", "RoomImage")
-                        .WithMany("Descriptions")
-                        .HasForeignKey("RoomImageId")
+                    b.HasOne("Roomify.GP.Core.Entities.AI.RoomImage.RoomImage", "RoomImage")
+                        .WithOne("Description")
+                        .HasForeignKey("Roomify.GP.Core.Entities.AI.RoomImage.Description", "RoomImageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("RoomImage");
+                });
+
+            modelBuilder.Entity("Roomify.GP.Core.Entities.AI.RoomImage.RoomImage", b =>
+                {
+                    b.HasOne("Roomify.GP.Core.Entities.Identity.ApplicationUser", "ApplicationUser")
+                        .WithMany()
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.Identity.EmailConfirmationToken", b =>
@@ -483,14 +527,17 @@ namespace Roomify.GP.Repository.Migrations
                 {
                     b.HasOne("Roomify.GP.Core.Entities.Identity.ApplicationUser", "ApplicationUser")
                         .WithMany()
-                        .HasForeignKey("ApplicationUserId1");
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("ApplicationUser");
                 });
 
-            modelBuilder.Entity("Roomify.GP.Core.Entities.RoomImage", b =>
+            modelBuilder.Entity("Roomify.GP.Core.Entities.AI.RoomImage.RoomImage", b =>
                 {
-                    b.Navigation("Descriptions");
+                    b.Navigation("Description")
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

@@ -16,7 +16,7 @@ namespace Roomify.GP.Repository.Data.Contexts
         public DbSet<RoomImage> RoomImages { get; set; }
         public DbSet<Description> Descriptions { get; set; }
         public DbSet<PortfolioPost> PortfolioPosts { get; set; }
-
+        public DbSet<Message> Messages { get; set; }
         // ✅ جدول OTP الموحد لتأكيد الإيميل واستعادة الباسورد
         public DbSet<OtpCode> OtpCodes { get; set; }
         public DbSet<EmailConfirmationToken> EmailConfirmationTokens { get; set; }
