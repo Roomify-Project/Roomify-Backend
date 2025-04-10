@@ -16,7 +16,7 @@ namespace Roomify.GP.Repository.Repositories
 
         public async Task<ApplicationUser> GetUserByIdAsync(Guid id)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id.ToString());
+            return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
         }
 
         public async Task<IEnumerable<ApplicationUser>> GetAllUsersAsync()
@@ -48,7 +48,7 @@ namespace Roomify.GP.Repository.Repositories
 
         public async Task<bool> UserExistsAsync(Guid? id)
         {
-            return await _context.Users.AnyAsync(u => u.Id == id.ToString());
+            return await _context.Users.AnyAsync(u => u.Id == id);
 
         }
 

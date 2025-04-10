@@ -19,13 +19,13 @@ namespace Roomify.GP.API.Controllers
         }
 
         [HttpPost("sendMessage")]
-        public async Task<IActionResult> SendMessage(string senderId, string receiverId, string message)
+        public async Task<IActionResult> SendMessage(Guid senderId, Guid receiverId, string message)
         {
             // حفظ الرسالة في قاعدة البيانات
             await _messageService.SaveMessage(senderId, receiverId, message);
 
             // إرسال الرسالة عبر SignalR للمستقبل
-            await _hubContext.Clients.User(receiverId).SendAsync("ReceiveMessage", message);
+            await _hubContext.Clients.User(receiverId.ToString()).SendAsync("ReceiveMessage", message);
             return Ok("Message sent successfully.");
         }
     }

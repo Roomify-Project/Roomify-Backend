@@ -41,15 +41,15 @@ builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IEmailConfirmationTokenRepository, EmailConfirmationTokenRepository>();
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-builder.Services.Configure<JwtSettings>(
-    builder.Configuration.GetSection("JwtSettings"));
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.AddScoped<IJwtService, JwtService>();
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+// Register Identity with Roles
+builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
@@ -61,8 +61,9 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
-builder.Services.AddScoped<MessageService>();
 
+builder.Services.AddScoped<MessageService>();
+builder.Services.AddScoped<RoleManager<IdentityRole<Guid>>>();  // Ensure RoleManager is correctly registered
 
 // Register Cloudinary
 builder.Services.AddSingleton(serviceProvider =>
@@ -93,7 +94,7 @@ using var scope = app.Services.CreateScope();
 var services = scope.ServiceProvider;
 var context = services.GetRequiredService<AppDbContext>();
 var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
 
 try
 {
@@ -101,7 +102,7 @@ try
 
     if (!await roleManager.RoleExistsAsync("User"))
     {
-        await roleManager.CreateAsync(new IdentityRole("User"));
+        await roleManager.CreateAsync(new IdentityRole<Guid>("User"));
     }
 }
 catch (Exception ex)

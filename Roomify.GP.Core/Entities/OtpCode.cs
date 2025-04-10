@@ -8,10 +8,10 @@ namespace Roomify.GP.Core.Entities
     public class OtpCode
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         [Required]
-        public string UserId { get; set; }
+        public Guid UserId { get; set; }
 
         [ForeignKey("UserId")]
         public ApplicationUser User { get; set; }

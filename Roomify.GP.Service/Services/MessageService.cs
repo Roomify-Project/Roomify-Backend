@@ -9,7 +9,7 @@ public class MessageService
         _context = context;
     }
 
-    public async Task SaveMessage(string senderId, string receiverId, string message)
+    public async Task SaveMessage(Guid senderId, Guid receiverId, string message)
     {
         var newMessage = new Message
         {

@@ -18,7 +18,7 @@ namespace Roomify.GP.Core.Entities
 
 
         // FK
-        public string ApplicationUserId { get; set; }
+        public Guid ApplicationUserId { get; set; }
         public required ApplicationUser ApplicationUser { get; set; }
     }
 }

@@ -16,13 +16,13 @@ namespace Roomify.GP.API.Hubs
         }
 
         // إرسال رسالة خاصة لمستخدم معين
-        public async Task SendMessageToUser(string senderId, string receiverId, string message)
+        public async Task SendMessageToUser(Guid senderId, Guid receiverId, string message)
         {
             // حفظ الرسالة في قاعدة البيانات
             await _messageService.SaveMessage(senderId, receiverId, message);
 
             // إرسال الرسالة للمستخدم المحدد
-            await Clients.User(receiverId).SendAsync("ReceiveMessage", message);
+            await Clients.User(receiverId.ToString()).SendAsync("ReceiveMessage", message);
         }
 
         // إرسال رسالة لجميع المتصلين (اختياري لو كنت عايز الرسائل تكون عامة)
