@@ -89,7 +89,7 @@ namespace Roomify.GP.API.Controllers
                 post.ImagePath = imageUrl;
                 post.CreatedAt = DateTime.UtcNow;
                 post.ApplicationUser = user;
-                post.ApplicationUserId = userId.ToString();
+                post.ApplicationUserId = userId;
 
                 await _service.AddAsync(userId, post);
                 _logger.LogInformation("Post uploaded successfully for user {UserId}", userId);

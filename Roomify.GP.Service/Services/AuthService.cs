@@ -43,8 +43,10 @@ namespace Roomify.GP.Service
 
             return new LoginResponseDto
             {
+                UserId = user.Id, // Ensure UserId is included
+                Email = user.Email, // Ensure Email is included
                 UserName = user.UserName,
-                Roles = user.Roles.ToString(),
+                Roles = string.Join(", ", await _userManager.GetRolesAsync(user)), // This will ensure roles are properly retrieved
                 Token = token
             };
         }
@@ -57,27 +59,14 @@ namespace Roomify.GP.Service
                 UserName = dto.UserName,
                 Email = dto.Email,
                 Bio = dto.Bio,
-                Roles = Enum.Parse<Roles>(dto.Roles),    // String to Enum conversion
+                Roles = dto.Roles, // Direct assignment without conversion
                 CreatedDate = DateTime.UtcNow
             };
-
-            // Check if Roles is valid
-            if (Enum.TryParse<Roles>(dto.Roles, out var roleEnum))
-            {
-                user.Roles = roleEnum;
-            }
-            else
-            {
-                // To Handle invalid role input
-                throw new ArgumentException($"Invalid role: {dto.Roles}");
-            }
 
             // Check if user already exists
             var existingUser = await _userManager.FindByEmailAsync(dto.Email);
             if (existingUser != null)
                 throw new ApplicationException("User already exists with this email.");
-
-
 
             var result = await _userManager.CreateAsync(user, dto.Password);
 
@@ -113,10 +102,10 @@ namespace Roomify.GP.Service
 
             return new LoginResponseDto
             {
-                UserId = user.Id,
-                Email = user.Email,
+                UserId = user.Id, // Ensure UserId is included
+                Email = user.Email, // Ensure Email is included
                 UserName = user.UserName,
-                Roles = user.Roles.ToString(),
+                Roles = string.Join(", ", await _userManager.GetRolesAsync(user)), // Properly join roles if there are multiple
                 Token = token
             };
         }
@@ -199,7 +188,7 @@ namespace Roomify.GP.Service
         {
             var authClaims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };

@@ -19,7 +19,7 @@ namespace Roomify.GP.Repository.Repositories
             await _context.EmailConfirmationTokens.AddAsync(token);
         }
 
-        public async Task<EmailConfirmationToken?> GetActiveTokenAsync(string userId, string code)
+        public async Task<EmailConfirmationToken?> GetActiveTokenAsync(Guid userId, string code)
         {
             return await _context.EmailConfirmationTokens
                 .Where(t => t.UserId == userId && t.Code == code && !t.IsUsed && t.ExpiryAt > DateTime.UtcNow)
@@ -29,7 +29,7 @@ namespace Roomify.GP.Repository.Repositories
         public async Task<EmailConfirmationToken?> GetByUserIdAsync(Guid userId)
         {
             return await _context.EmailConfirmationTokens
-                .Where(t => t.UserId == userId.ToString() && !t.IsUsed && t.ExpiryAt > DateTime.UtcNow)
+                .Where(t => t.UserId == userId && !t.IsUsed && t.ExpiryAt > DateTime.UtcNow)
                 .FirstOrDefaultAsync();
         }
 

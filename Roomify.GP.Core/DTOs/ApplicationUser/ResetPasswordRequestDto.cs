@@ -9,7 +9,7 @@ namespace Roomify.GP.Core.DTOs.ApplicationUser
     public class ResetPasswordRequestDto
     {
         public string Email { get; set; }
-        public string OtpCode { get; set; } = null!;
+        public string OtpCode { get; set; } 
         public string NewPassword { get; set; }
     }
 }

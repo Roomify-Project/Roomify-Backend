@@ -21,7 +21,7 @@ namespace Roomify.GP.Core.Entities.AI.RoomImage
         public virtual Prompt Prompt { get; set; }
 
         // Navigation Properties
-        public string ApplicationUserId { get; set; }    // FK
+        public Guid ApplicationUserId { get; set; }    // FK
         public virtual ApplicationUser ApplicationUser { get; set; }
     }
 }
