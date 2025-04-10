@@ -18,6 +18,7 @@ using Roomify.GP.Repository.Data.Contexts;
 using Roomify.GP.Service;
 using IJwtService = Roomify.GP.Service.Services.IJwtService;
 using Roomify.GP.API.Hubs;
+using Roomify.GP.Core.Background_Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,10 @@ builder.Services.AddScoped<IPortfolioPostRepository, PortfolioPostRepository>();
 builder.Services.AddScoped<IPortfolioPostService, PortfolioPostService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IEmailConfirmationTokenRepository, EmailConfirmationTokenRepository>();
+builder.Services.AddScoped<IPromptRepository, PromptRepository>();
+builder.Services.AddScoped<IRoomImageRepository, RoomImageRepository>();
+builder.Services.AddScoped<IRoomImageService, RoomImageService>();
+
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<JwtSettings>(
@@ -78,6 +83,9 @@ builder.Services.AddSingleton(serviceProvider =>
     var account = new Account(cloudinarySettings.CloudName, cloudinarySettings.ApiKey, cloudinarySettings.ApiSecret);
     return new Cloudinary(account);
 });
+
+// Register The CleanupService as a BackgroundService
+builder.Services.AddHostedService<CleanupService>();
 
 // Add SignalR
 builder.Services.AddSignalR();
