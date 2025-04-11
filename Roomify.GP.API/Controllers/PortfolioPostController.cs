@@ -93,7 +93,7 @@ namespace Roomify.GP.API.Controllers
 
                 await _service.AddAsync(userId, post);
                 _logger.LogInformation("Post uploaded successfully for user {UserId}", userId);
-                return Ok(new { message = "Post uploaded successfully.", imageUrl });
+                return Ok(new { message = "Post uploaded successfully.", imageUrl, post.Id, post.ApplicationUserId, post.Description});
             }
             catch (ApplicationException ex) 
             {

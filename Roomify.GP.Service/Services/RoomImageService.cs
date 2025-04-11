@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace Roomify.GP.Service.Services
 {
+
     public class RoomImageService :IRoomImageService
     {
         private readonly IRoomImageRepository _roomImageRepository;
@@ -35,7 +36,7 @@ namespace Roomify.GP.Service.Services
             return await _cloudinaryService.UploadImageAsync(image);  // استدعاء خدمة رفع الصورة لـ Cloudinary
         }
 
-        public async Task<RoomImage> GenerateRoomImageAsync(string imagePath, string descriptionText, RoomStyle roomStyle, RoomType roomType)
+        public async Task<RoomImage> GenerateRoomImageAsync(IFormFile imagePath, string descriptionText, RoomStyle roomStyle, RoomType roomType)
         {
             // رفع الصورة إلى Cloudinary بعد توليدها
             var imageUrl = await _cloudinaryService.UploadImageAsync(imagePath); // رفع الصورة إلى Cloudinary
@@ -91,4 +92,5 @@ namespace Roomify.GP.Service.Services
         }
     
     }
+
 }

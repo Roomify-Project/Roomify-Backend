@@ -12,7 +12,7 @@ namespace Roomify.GP.Core.Service.Contract
     public interface IRoomImageService
     {
         Task<string> SaveImageAsync(IFormFile image);  // To Save/Send Image To The Server
-        Task<RoomImage> GenerateRoomImageAsync(string imagePath, string descriptionText, RoomStyle roomStyle, RoomType roomType);  // For Creating the Image With It's Prompt and Sending It To The AI
+        Task<RoomImage> GenerateRoomImageAsync(IFormFile imagePath, string descriptionText, RoomStyle roomStyle, RoomType roomType);  // For Creating the Image With It's Prompt and Sending It To The AI
 
         Task<AIResultHistory> SaveAIResultHistoryAsync(string imageUrl, string userId);  // For Saving The AIResultHistory
         Task<SavedDesign> SaveUserDesignAsync(string imageUrl, string userId);  // For Adding The Saved Designs

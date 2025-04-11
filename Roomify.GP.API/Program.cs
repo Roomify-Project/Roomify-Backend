@@ -40,9 +40,13 @@ builder.Services.AddScoped<IPortfolioPostRepository, PortfolioPostRepository>();
 builder.Services.AddScoped<IPortfolioPostService, PortfolioPostService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IEmailConfirmationTokenRepository, EmailConfirmationTokenRepository>();
-builder.Services.AddScoped<IPromptRepository, PromptRepository>();
-builder.Services.AddScoped<IRoomImageRepository, RoomImageRepository>();
-builder.Services.AddScoped<IRoomImageService, RoomImageService>();
+//builder.Services.AddScoped<IRoomImageRepository, RoomImageRepository>();
+//builder.Services.AddScoped<IRoomImageService, RoomImageService>();
+//builder.Services.AddScoped<IPromptRepository, PromptRepository>();
+//builder.Services.AddSingleton<IAIResultHistoryRepository, AIResultHistoryRepository>();
+//builder.Services.AddScoped<ISavedDesignRepository, SavedDesignRepository>();
+//builder.Services.AddSingleton<IHostedService, CleanupService>();
+
 
 
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
@@ -86,7 +90,7 @@ builder.Services.AddSingleton(serviceProvider =>
 });
 
 // Register The CleanupService as a BackgroundService
-builder.Services.AddHostedService<CleanupService>();
+//builder.Services.AddHostedService<CleanupService>();
 
 // Add SignalR
 builder.Services.AddSignalR();
@@ -100,7 +104,7 @@ var app = builder.Build();
 // Database Migrations and Role Creation
 using var scope = app.Services.CreateScope();
 var services = scope.ServiceProvider;
-var context = services.GetRequiredService<AppDbContext>();
+var context = services.GetRequiredService<AppDbContext>();  
 var loggerFactory = services.GetRequiredService<ILoggerFactory>();
 var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
 
