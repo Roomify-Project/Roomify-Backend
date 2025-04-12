@@ -20,6 +20,8 @@ using IJwtService = Roomify.GP.Service.Services.IJwtService;
 using Roomify.GP.API.Hubs;
 using Roomify.GP.Core.Background_Services;
 
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -40,22 +42,8 @@ builder.Services.AddScoped<IPortfolioPostRepository, PortfolioPostRepository>();
 builder.Services.AddScoped<IPortfolioPostService, PortfolioPostService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IEmailConfirmationTokenRepository, EmailConfirmationTokenRepository>();
-//builder.Services.AddScoped<IRoomImageRepository, RoomImageRepository>();
-//builder.Services.AddScoped<IRoomImageService, RoomImageService>();
-//builder.Services.AddScoped<IPromptRepository, PromptRepository>();
-//builder.Services.AddSingleton<IAIResultHistoryRepository, AIResultHistoryRepository>();
-//builder.Services.AddScoped<ISavedDesignRepository, SavedDesignRepository>();
-//builder.Services.AddSingleton<IHostedService, CleanupService>();
-
-
-
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-
-var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
-
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.AddScoped<IJwtService, JwtService>();
+
 
 // Register Identity with Roles
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
@@ -66,14 +54,6 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
 
-// Load appsettings.Local.json if exists
-builder.Configuration
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
-
-builder.Services.AddScoped<MessageService>();
-builder.Services.AddScoped<RoleManager<IdentityRole<Guid>>>();  // Ensure RoleManager is correctly registered
-
 // Register Cloudinary
 builder.Services.AddSingleton(serviceProvider =>
 {
@@ -82,15 +62,15 @@ builder.Services.AddSingleton(serviceProvider =>
 
     if (cloudinarySettings == null)
     {
-        throw new Exception("Cloudinary settings are not configured properly.");
+        var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError("Cloudinary settings are not configured properly.");
+        return new Cloudinary(new Account("default", "defaultApiKey", "defaultApiSecret"));
     }
 
     var account = new Account(cloudinarySettings.CloudName, cloudinarySettings.ApiKey, cloudinarySettings.ApiSecret);
     return new Cloudinary(account);
 });
 
-// Register The CleanupService as a BackgroundService
-//builder.Services.AddHostedService<CleanupService>();
 
 // Add SignalR
 builder.Services.AddSignalR();
@@ -104,7 +84,7 @@ var app = builder.Build();
 // Database Migrations and Role Creation
 using var scope = app.Services.CreateScope();
 var services = scope.ServiceProvider;
-var context = services.GetRequiredService<AppDbContext>();  
+var context = services.GetRequiredService<AppDbContext>();
 var loggerFactory = services.GetRequiredService<ILoggerFactory>();
 var roleManager = services.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
 
@@ -129,9 +109,9 @@ app.UseMiddleware<ExceptionMiddleware>();
 // Configure CORS (Cross-Origin Resource Sharing)
 app.UseCors(builder =>
 {
-    builder.AllowAnyOrigin()  // السماح لجميع النطاقات
-           .AllowAnyMethod()  // السماح باستخدام أي طريقة (GET, POST, PUT, DELETE, ...)
-           .AllowAnyHeader(); // السماح باستخدام أي رأس (header)
+    builder.AllowAnyOrigin()
+           .AllowAnyMethod()
+           .AllowAnyHeader();
 });
 
 // Configure the HTTP request pipeline
@@ -147,6 +127,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.MapHub<PrivateChatHub>("/chat"); // ربط الـ SignalR Hub مع URL
+app.MapHub<PrivateChatHub>("/chat");
 
 app.Run();
