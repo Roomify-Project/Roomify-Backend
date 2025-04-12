@@ -10,5 +10,7 @@ namespace Roomify.GP.Core.Service.Contract
         Task<bool> ForgetPasswordAsync(ForgetPasswordRequestDto request);
         Task<bool> ConfirmEmailAsync(string email, string otpCode);
         Task<bool> ResetPasswordAsync(ResetPasswordRequestDto request);
+        Task<bool> ChangePasswordAsync(Guid userId, ChangePasswordDto dto);
+
     }
 }
