@@ -19,6 +19,9 @@ namespace Roomify.GP.Service.Services
 
         public async Task SendEmailAsync(string to, string subject, string body)
         {
+            if (string.IsNullOrWhiteSpace(to))
+                throw new ArgumentException("Email address 'to' cannot be null or empty", nameof(to));
+
             var email = new MimeMessage();
             email.Sender = MailboxAddress.Parse(_mailSettings.From);
             email.To.Add(MailboxAddress.Parse(to));

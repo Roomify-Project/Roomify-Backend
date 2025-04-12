@@ -36,7 +36,7 @@ namespace Roomify.GP.API.Middlewares
 
                 var json = JsonSerializer.Serialize(response);   //to convert the Response Message to JSON format, As the WriteAsync method accepts only string or byte array.
 
-                context.Response.WriteAsync(json);
+               await context.Response.WriteAsync(json);
             }
         }
     }

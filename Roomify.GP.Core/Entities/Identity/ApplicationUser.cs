@@ -7,7 +7,6 @@ namespace Roomify.GP.Core.Entities.Identity
         public string FullName { get; set; }
         public string Bio { get; set; }
         public string? ProfilePicture { get; set; }
-        public string Roles { get; set; }        //Enum
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public bool EmailConfirmed { get; set; } = false;
 

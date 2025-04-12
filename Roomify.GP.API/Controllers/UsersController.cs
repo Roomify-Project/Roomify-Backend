@@ -6,9 +6,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Roomify.GP.Core.Entities.Identity;
 using Roomify.GP.Core.Services.Contract;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Roomify.GP.API.Controllers
 {
+
+    [Authorize(Roles = "NormalUser")]
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase

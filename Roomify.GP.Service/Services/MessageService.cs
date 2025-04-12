@@ -1,6 +1,10 @@
 ﻿using Roomify.GP.Repository.Data.Contexts;
+using Roomify.GP.Core.Entities; 
+using System.Threading.Tasks;
+using Roomify.GP.Core.DTOs.ChatModel;
+using Roomify.GP.Core.Service.Contract;
 
-public class MessageService
+public class MessageService :IMessageService
 {
     private readonly AppDbContext _context;
 
@@ -9,13 +13,13 @@ public class MessageService
         _context = context;
     }
 
-    public async Task SaveMessage(Guid senderId, Guid receiverId, string message)
+    public async Task SaveMessage(ChatModel chatmodel)
     {
         var newMessage = new Message
         {
-            SenderId = senderId, // استخدام string
-            ReceiverId = receiverId, // استخدام string
-            Content = message,
+            SenderId = chatmodel.SenderId,
+            ReceiverId = chatmodel.ReceiverId,
+            Content = chatmodel.Message,
             SentAt = DateTime.UtcNow
         };
 

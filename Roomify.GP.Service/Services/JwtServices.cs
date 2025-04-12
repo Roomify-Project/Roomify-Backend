@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Roomify.GP.Core.Entities.Identity;
+using Roomify.GP.Core.Service.Contract;
 using Roomify.GP.Core.Settings;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -8,32 +10,37 @@ using System.Text;
 
 namespace Roomify.GP.Service.Services
 {
-    public interface IJwtService
-    {
-        string GenerateToken(ApplicationUser user);
-    }
-
     public class JwtService : IJwtService
     {
         private readonly JwtSettings _jwtSettings;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public JwtService(IOptions<JwtSettings> jwtOptions)
+        public JwtService(IOptions<JwtSettings> jwtOptions, UserManager<ApplicationUser> userManager)
         {
             _jwtSettings = jwtOptions.Value;
+            _userManager = userManager;
         }
 
-        public string GenerateToken(ApplicationUser user)
+        public async Task<string> GenerateToken(ApplicationUser user)
         {
-            var claims = new[]
+          
+            var roles = await _userManager.GetRolesAsync(user);
+            Console.WriteLine(string.Join(", ", roles)); // ✅ هنا اطبع الرولز
+
+            var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.UserName ?? ""),
+                new Claim(ClaimTypes.Name, user.UserName ?? "")
             };
-            Console.WriteLine("🔐 JWT SecretKey: " + _jwtSettings.SecretKey);
-            Console.WriteLine("Issuer: " + _jwtSettings.Issuer);
-            Console.WriteLine("SecretKey: " + _jwtSettings.SecretKey);
+
+            foreach (var role in roles)
+            {
+                // كلايمز مزدوجة عشان نضمن التوافق مع جميع السيناريوهات
+                claims.Add(new Claim(ClaimTypes.Role, role));
+                claims.Add(new Claim("role", role));
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

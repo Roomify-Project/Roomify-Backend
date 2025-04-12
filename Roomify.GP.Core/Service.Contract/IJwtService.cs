@@ -6,6 +6,6 @@ namespace Roomify.GP.Core.Service.Contract
 {
     public interface IJwtService
     {
-        string GenerateToken(ApplicationUser user);
+       Task<string>  GenerateToken(ApplicationUser user);
     }
 }

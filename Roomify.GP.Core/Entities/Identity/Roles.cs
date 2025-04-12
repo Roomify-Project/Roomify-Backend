@@ -9,10 +9,10 @@ namespace Roomify.GP.Core.Entities.Identity
 {
     public enum Roles
     {
-        [EnumMember(Value = "Normal User")]
+        [EnumMember(Value = "NormalUser")]
         NormalUser,
 
-        [EnumMember(Value = "Interior Designer")]
+        [EnumMember(Value = "InteriorDesigner")]
         InteriorDesigner
     }
 }

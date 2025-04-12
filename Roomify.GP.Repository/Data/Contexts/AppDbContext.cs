@@ -21,6 +21,8 @@ namespace Roomify.GP.Repository.Data.Contexts
         // ✅ جدول OTP الموحد لتأكيد الإيميل واستعادة الباسورد
         public DbSet<OtpCode> OtpCodes { get; set; }
         public DbSet<EmailConfirmationToken> EmailConfirmationTokens { get; set; }
+        public DbSet<UserConnection> UserConnections { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
