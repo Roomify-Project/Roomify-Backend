@@ -12,9 +12,14 @@ using Roomify.GP.Core.Settings;
 using Roomify.GP.Repository.Data.Contexts;
 using Roomify.GP.Repository.Repositories;
 using Roomify.GP.Service;
-using IJwtService = Roomify.GP.Service.Services.IJwtService;
-using Roomify.GP.API.Hubs;
-
+using Roomify.GP.Service.Helpers;
+using Roomify.GP.Service.Mappings;
+using Roomify.GP.Service.Services;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json.Serialization;
+using CloudinaryDotNet;
+using Microsoft.OpenApi.Models;
 
 
 var builder = WebApplication.CreateBuilder(args);
