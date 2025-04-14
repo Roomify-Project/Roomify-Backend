@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Roomify.GP.Core.Entities.AI.RoomImage
 {
-    public class Description
+    public class Prompt
     {
         public Guid Id { get; set; }
         public string DescriptionText { get; set; }

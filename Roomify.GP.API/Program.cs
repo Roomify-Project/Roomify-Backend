@@ -12,14 +12,10 @@ using Roomify.GP.Core.Settings;
 using Roomify.GP.Repository.Data.Contexts;
 using Roomify.GP.Repository.Repositories;
 using Roomify.GP.Service;
-using Roomify.GP.Service.Helpers;
-using Roomify.GP.Service.Mappings;
-using Roomify.GP.Service.Services;
-using System.Security.Claims;
-using System.Text;
-using System.Text.Json.Serialization;
-using CloudinaryDotNet;
-using Microsoft.OpenApi.Models;
+using IJwtService = Roomify.GP.Service.Services.IJwtService;
+using Roomify.GP.API.Hubs;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,16 +49,7 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IFollowService, FollowService>();
 builder.Services.AddScoped<IFollowRepository, FollowRepository>();
 builder.Services.AddScoped<MessageService>();
-
-
-
-
-builder.Services.AddAuthorization(); // لازم جداً
-
-// Identity
-builder.Services.AddIdentityCore<ApplicationUser>(options => { })
-    .AddRoles<IdentityRole<Guid>>()
-    .AddEntityFrameworkStores<AppDbContext>();
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
 
 // منع Redirect على /Account/Login
@@ -80,67 +67,30 @@ builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSet
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings.Issuer,
-            ValidAudience = jwtSettings.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
-            ClockSkew = TimeSpan.Zero,
-            NameClaimType = ClaimTypes.NameIdentifier,
-            RoleClaimType = ClaimTypes.Role
-        };
+// Load appsettings.Local.json if exists
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                var accessToken = context.Request.Query["access_token"];
-                var path = context.HttpContext.Request.Path;
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chat"))
-                {
-                    context.Token = accessToken;
-                }
-                return Task.CompletedTask;
-            }
-        };
-    });
+builder.Services.AddScoped<MessageService>();
+builder.Services.AddScoped<RoleManager<IdentityRole<Guid>>>();  // Ensure RoleManager is correctly registered
 
-// Cloudinary settings
+// Register Cloudinary
 builder.Services.AddSingleton(serviceProvider =>
 {
     var config = serviceProvider.GetRequiredService<IConfiguration>();
     var cloudinarySettings = config.GetSection("CloudinarySettings").Get<CloudinarySettings>();
 
     if (cloudinarySettings == null)
+    {
         throw new Exception("Cloudinary settings are not configured properly.");
+    }
 
     var account = new Account(cloudinarySettings.CloudName, cloudinarySettings.ApiKey, cloudinarySettings.ApiSecret);
     return new Cloudinary(account);
 });
 
-// CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("CorsPolicy", builder =>
-    {
-        builder
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .SetIsOriginAllowed(_ => true)
-            .AllowCredentials();
-    });
-});
-
-// SignalR
+// Add SignalR
 builder.Services.AddSignalR();
 
 // Swagger + JWT Auth
@@ -202,7 +152,14 @@ using (var scope = app.Services.CreateScope())
 
 // Middleware
 app.UseMiddleware<ExceptionMiddleware>();
-app.UseCors("CorsPolicy");
+
+// Configure CORS (Cross-Origin Resource Sharing)
+app.UseCors(builder =>
+{
+    builder.AllowAnyOrigin()  // السماح لجميع النطاقات
+           .AllowAnyMethod()  // السماح باستخدام أي طريقة (GET, POST, PUT, DELETE, ...)
+           .AllowAnyHeader(); // السماح باستخدام أي رأس (header)
+});
 
 if (app.Environment.IsDevelopment())
 {
@@ -216,6 +173,6 @@ app.UseAuthorization();
 
 // Endpoints
 app.MapControllers();
-app.MapHub<PrivateChatHub>("/chat").RequireAuthorization();
+app.MapHub<PrivateChatHub>("/chat"); // ربط الـ SignalR Hub مع URL
 
 app.Run();

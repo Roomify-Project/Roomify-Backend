@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Roomify.GP.Repository.Data.Contexts;
 
@@ -11,13 +12,15 @@ using Roomify.GP.Repository.Data.Contexts;
 namespace Roomify.GP.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250411163214_EditRegister")]
+    partial class EditRegister
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "9.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -374,6 +377,10 @@ namespace Roomify.GP.Repository.Migrations
                     b.Property<string>("ProviderId")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Roles")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -424,27 +431,6 @@ namespace Roomify.GP.Repository.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("EmailConfirmationTokens");
-                });
-
-            modelBuilder.Entity("Roomify.GP.Core.Entities.Identity.UserConnection", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("ConnectedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ConnectionId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UserConnections");
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.OtpCode", b =>
@@ -508,24 +494,6 @@ namespace Roomify.GP.Repository.Migrations
                     b.HasIndex("ApplicationUserId");
 
                     b.ToTable("PortfolioPosts");
-                });
-
-            modelBuilder.Entity("Roomify.GP.Core.Entities.UserFollow", b =>
-                {
-                    b.Property<Guid>("FollowerId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("FollowingId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("FollowedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("FollowerId", "FollowingId");
-
-                    b.HasIndex("FollowingId");
-
-                    b.ToTable("UserFollows");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -656,36 +624,10 @@ namespace Roomify.GP.Repository.Migrations
                     b.Navigation("ApplicationUser");
                 });
 
-            modelBuilder.Entity("Roomify.GP.Core.Entities.UserFollow", b =>
-                {
-                    b.HasOne("Roomify.GP.Core.Entities.Identity.ApplicationUser", "Follower")
-                        .WithMany("Following")
-                        .HasForeignKey("FollowerId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Roomify.GP.Core.Entities.Identity.ApplicationUser", "Following")
-                        .WithMany("Followers")
-                        .HasForeignKey("FollowingId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Follower");
-
-                    b.Navigation("Following");
-                });
-
             modelBuilder.Entity("Roomify.GP.Core.Entities.AI.RoomImage.RoomImage", b =>
                 {
                     b.Navigation("Prompt")
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Roomify.GP.Core.Entities.Identity.ApplicationUser", b =>
-                {
-                    b.Navigation("Followers");
-
-                    b.Navigation("Following");
                 });
 #pragma warning restore 612, 618
         }
