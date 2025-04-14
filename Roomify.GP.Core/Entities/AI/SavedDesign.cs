@@ -14,7 +14,7 @@ namespace Roomify.GP.Core.Entities.AI
         public DateTime SavedAt { get; set; }
 
         // Navigational Property
-        public string ApplicationUserId { get; set; }
+        public Guid ApplicationUserId { get; set; }
         public virtual ApplicationUser ApplicationUser { get; set; }
     }
 }

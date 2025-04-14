@@ -8,7 +8,7 @@ namespace Roomify.GP.Core.Entities.AI
 {
     public class AIResult
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Status { get; set; }
         public string GeneratedImageUrl { get; set; }
     }

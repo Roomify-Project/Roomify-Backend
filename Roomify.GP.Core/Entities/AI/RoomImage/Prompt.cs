@@ -14,7 +14,7 @@ namespace Roomify.GP.Core.Entities.AI.RoomImage
         public RoomType RoomType { get; set; }    // Enum
 
         // FK
-        public Guid RoomImageId { get; set; } 
+        public Guid RoomImageId { get; set; }
         public virtual RoomImage RoomImage { get; set; }
 
     }
