@@ -77,8 +77,11 @@ builder.Configuration
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
-builder.Services.AddScoped<MessageService>();
-builder.Services.AddScoped<RoleManager<IdentityRole<Guid>>>();  // Ensure RoleManager is correctly registered
+
+//builder.Services.AddScoped<RoleManager<IdentityRole<Guid>>>();  // Ensure RoleManager is correctly registered
+builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
 
 // Register Cloudinary
 builder.Services.AddSingleton(serviceProvider =>

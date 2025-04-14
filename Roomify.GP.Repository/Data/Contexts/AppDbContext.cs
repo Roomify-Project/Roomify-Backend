@@ -35,7 +35,7 @@ namespace Roomify.GP.Repository.Data.Contexts
 
             #region FollowSetup
             builder.Entity<UserFollow>()
-        .HasKey(uf => new { uf.FollowerId, uf.FollowingId });
+                .HasKey(uf => new { uf.FollowerId, uf.FollowingId });
 
             builder.Entity<UserFollow>()
                 .HasOne(uf => uf.Follower)
