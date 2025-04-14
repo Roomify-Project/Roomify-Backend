@@ -42,11 +42,14 @@ builder.Services.AddScoped<IPortfolioPostRepository, PortfolioPostRepository>();
 builder.Services.AddScoped<IPortfolioPostService, PortfolioPostService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IEmailConfirmationTokenRepository, EmailConfirmationTokenRepository>();
-
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IUserConnectionRepository, UserConnectionRepository>();
+builder.Services.AddScoped<IUserConnectionService, UserConnectionService>();
+builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IFollowService, FollowService>();
+builder.Services.AddScoped<IFollowRepository, FollowRepository>();
+builder.Services.AddScoped<MessageService>();
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-
-var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 
 
 // منع Redirect على /Account/Login
