@@ -9,6 +9,8 @@ namespace Roomify.GP.Core.Entities.Identity
         public string? ProfilePicture { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public bool EmailConfirmed { get; set; } = false;
+        public ICollection<UserFollow> Followers { get; set; }
+        public ICollection<UserFollow> Following { get; set; }
 
 
         public string? Provider { get; set; }

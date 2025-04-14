@@ -50,6 +50,12 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserConnectionRepository, UserConnectionRepository>();
 builder.Services.AddScoped<IUserConnectionService, UserConnectionService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IFollowService, FollowService>();
+builder.Services.AddScoped<IFollowRepository, FollowRepository>();
+builder.Services.AddScoped<MessageService>();
+
+
+
 
 builder.Services.AddAuthorization(); // لازم جداً
 
