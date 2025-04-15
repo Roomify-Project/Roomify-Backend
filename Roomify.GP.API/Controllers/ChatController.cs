@@ -10,7 +10,8 @@ using System.Security.Claims;
 namespace Roomify.GP.API.Controllers
 {
 
-    [Authorize(Roles = "NormalUser")]
+    [Authorize(Roles = "NormalUser,InteriorDesigner")]
+
     [Route("api/[controller]")]
     [ApiController]
    
@@ -28,10 +29,10 @@ namespace Roomify.GP.API.Controllers
         [HttpPost("sendMessage")]
         public async Task<IActionResult> SendMessage([FromBody] ChatModel chatModel)
         {
-            //// استخراج الـ UserId من الـ Token
-            //var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            //if (currentUserId != chatModel.SenderId.ToString())
-            //    return Unauthorized("You are not authorized to send this message.");
+            // استخراج الـ UserId من الـ Token
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (currentUserId != chatModel.SenderId.ToString())
+                return Unauthorized("You are not authorized to send this message.");
 
 
             if (string.IsNullOrWhiteSpace(chatModel.Message))

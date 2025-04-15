@@ -12,7 +12,7 @@ using System.Security.Claims;
 namespace Roomify.GP.API.Hubs
 {
 
-    [Authorize(Roles = "NormalUser")]
+    [Authorize(Roles = "NormalUser,InteriorDesigner")]
     public class PrivateChatHub : Hub
     {
         private readonly IMessageService _messageService;

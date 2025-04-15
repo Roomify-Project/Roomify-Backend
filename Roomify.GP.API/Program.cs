@@ -20,6 +20,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using CloudinaryDotNet;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -188,15 +189,21 @@ using (var scope = app.Services.CreateScope())
     {
         await context.Database.MigrateAsync();
 
-        if (!await roleManager.RoleExistsAsync("NormalUser"))
+        // ✅ نضيف هنا كل الرولز اللي محتاجينها
+        string[] roles = { "NormalUser", "InteriorDesigner" };
+
+        foreach (var role in roles)
         {
-            await roleManager.CreateAsync(new IdentityRole<Guid>("NormalUser"));
+            if (!await roleManager.RoleExistsAsync(role))
+            {
+                await roleManager.CreateAsync(new IdentityRole<Guid>(role));
+            }
         }
     }
     catch (Exception ex)
     {
         var logger = loggerFactory.CreateLogger<Program>();
-        logger.LogError(ex, "An error occurred during migration.");
+        logger.LogError(ex, "An error occurred during migration or role creation.");
     }
 }
 
@@ -216,6 +223,8 @@ app.UseAuthorization();
 
 // Endpoints
 app.MapControllers();
-app.MapHub<PrivateChatHub>("/chat").RequireAuthorization();
+app.MapHub<PrivateChatHub>("/chat")
+    .RequireAuthorization(new AuthorizeAttribute { Roles = "NormalUser,InteriorDesigner" });
+
 
 app.Run();

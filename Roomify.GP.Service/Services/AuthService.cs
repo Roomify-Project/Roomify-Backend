@@ -73,6 +73,10 @@ namespace Roomify.GP.Service
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                 throw new ApplicationException($"Register failed: {errors}");
             }
+            var allowedRoles = new[] { "NormalUser", "InteriorDesigner" };
+
+            if (!allowedRoles.Contains(dto.Roles))
+                throw new ApplicationException("Invalid role. You can only choose 'NormalUser' or 'InteriorDesigner'.");
 
             await _userManager.AddToRoleAsync(user, dto.Roles);
 

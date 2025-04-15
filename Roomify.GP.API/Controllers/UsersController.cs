@@ -11,7 +11,8 @@ using Microsoft.AspNetCore.Authorization;
 namespace Roomify.GP.API.Controllers
 {
 
-    [Authorize(Roles = "NormalUser")]
+    [Authorize(Roles = "NormalUser,InteriorDesigner")]
+
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
