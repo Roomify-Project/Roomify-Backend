@@ -13,8 +13,7 @@ namespace Roomify.GP.Repository.Data.Contexts
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options) { }
 
-        // ✅ كيانات المشروع الأصلية
-        //public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+
         public DbSet<RoomImage> RoomImages { get; set; }
         public DbSet<Prompt> Prompts { get; set; }
         public DbSet<AIResult> AIResults { get; set; }
@@ -22,7 +21,6 @@ namespace Roomify.GP.Repository.Data.Contexts
         public DbSet<SavedDesign> SavedDesigns { get; set; }
         public DbSet<PortfolioPost> PortfolioPosts { get; set; }
         public DbSet<Message> Messages { get; set; }
-        // ✅ جدول OTP الموحد لتأكيد الإيميل واستعادة الباسورد
         public DbSet<OtpCode> OtpCodes { get; set; }
         public DbSet<EmailConfirmationToken> EmailConfirmationTokens { get; set; }
         public DbSet<UserConnection> UserConnections { get; set; }
@@ -50,12 +48,28 @@ namespace Roomify.GP.Repository.Data.Contexts
                 .OnDelete(DeleteBehavior.NoAction);
             #endregion
 
-
-
             builder.Entity<EmailConfirmationToken>()
                 .HasOne(e => e.User)
                 .WithMany()
                 .HasForeignKey(e => e.UserId);
+
+
+            // Configure AIResultHistory relationships
+            builder.Entity<AIResultHistory>()
+                .HasOne(x => x.ApplicationUser)
+                .WithMany()
+                .HasForeignKey(x => x.ApplicationUserId);
+
+            builder.Entity<AIResultHistory>()
+                .HasOne(x => x.AIResult)
+                .WithMany()
+                .HasForeignKey(x => x.AIResultId);
+
+            // Configure SavedDesign relationships
+            builder.Entity<SavedDesign>()
+                .HasOne(x => x.ApplicationUser)
+                .WithMany()
+                .HasForeignKey(x => x.ApplicationUserId);
         }
     }
 }

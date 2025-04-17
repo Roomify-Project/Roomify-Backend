@@ -20,6 +20,8 @@ using System.Text;
 using System.Text.Json.Serialization;
 using CloudinaryDotNet;
 using Microsoft.OpenApi.Models;
+using Roomify.GP.Core.Background_Services;
+using Roomify.GP.API.Filters;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -45,7 +47,7 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPortfolioPostRepository, PortfolioPostRepository>();
 builder.Services.AddScoped<IPortfolioPostService, PortfolioPostService>();
-builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+builder.Services.AddSingleton<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IEmailConfirmationTokenRepository, EmailConfirmationTokenRepository>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserConnectionRepository, UserConnectionRepository>();
@@ -55,7 +57,16 @@ builder.Services.AddScoped<IFollowService, FollowService>();
 builder.Services.AddScoped<IFollowRepository, FollowRepository>();
 builder.Services.AddScoped<MessageService>();
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+ //AI DI : 
+builder.Services.AddScoped<IRoomImageRepository, RoomImageRepository>();
+builder.Services.AddScoped<IRoomImageService, RoomImageService>();
+builder.Services.AddScoped<IPromptRepository, PromptRepository>();
+builder.Services.AddScoped<IAIResultHistoryRepository, AIResultHistoryRepository>();
+builder.Services.AddScoped<ISavedDesignRepository, SavedDesignRepository>();
+builder.Services.AddHostedService<CleanupService>();
+builder.Services.AddSingleton<CleanupService>();
 
+ 
 
 // منع Redirect على /Account/Login
 builder.Services.ConfigureApplicationCookie(options =>
@@ -91,7 +102,9 @@ builder.Services.AddSingleton(serviceProvider =>
 
     if (cloudinarySettings == null)
     {
-        throw new Exception("Cloudinary settings are not configured properly.");
+        var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError("Cloudinary settings are not configured properly.");
+        return new Cloudinary(new Account("default", "defaultApiKey", "defaultApiSecret"));
     }
 
     var account = new Account(cloudinarySettings.CloudName, cloudinarySettings.ApiKey, cloudinarySettings.ApiSecret);
@@ -130,6 +143,9 @@ builder.Services.AddSwaggerGen(c =>
             Array.Empty<string>()
         }
     });
+
+    // Register the custom operation filter
+    c.OperationFilter<FileUploadOperationFilter>();
 });
 
 var app = builder.Build();
@@ -158,8 +174,10 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Middleware
+
+// Configure ApplicationUser-Defined Middleware
 app.UseMiddleware<ExceptionMiddleware>();
+
 
 // Configure CORS (Cross-Origin Resource Sharing)
 app.UseCors(builder =>
