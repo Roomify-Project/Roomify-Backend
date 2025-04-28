@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.SignalR;
 using Roomify.GP.API.Hubs;
 using Roomify.GP.Core.DTOs.ChatModel;
 using Roomify.GP.Core.Service.Contract;
+using Roomify.GP.Core.Services.Contract;
 using Roomify.GP.Service;
+using Roomify.GP.Service.Services;
 using System.Security.Claims;
 
 namespace Roomify.GP.API.Controllers
@@ -19,11 +21,12 @@ namespace Roomify.GP.API.Controllers
     {
         private readonly IHubContext<PrivateChatHub> _hubContext;
         private readonly IMessageService _messageService;
-
-        public ChatController(IHubContext<PrivateChatHub> hubContext, IMessageService messageService)
+        private readonly IUserConnectionService _userConnectionService;
+        public ChatController(IHubContext<PrivateChatHub> hubContext, IMessageService messageService , IUserConnectionService userConnectionService)
         {
             _hubContext = hubContext;
             _messageService = messageService;
+            _userConnectionService = userConnectionService;
         }
 
         [HttpPost("sendMessage")]
@@ -54,5 +57,26 @@ namespace Roomify.GP.API.Controllers
 
             return Ok("Message sent successfully.");
         }
+
+
+        [HttpGet("getMessages/{userId}")]
+        public async Task<IActionResult> GetMessages(Guid userId)
+        {
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(currentUserId, out Guid parsedCurrentUserId))
+                return Unauthorized("Invalid user.");
+
+            var messages = await _messageService.GetMessagesAsync(parsedCurrentUserId, userId);
+            return Ok(messages);
+        }
+
+
+        [HttpGet("isOnline/{userId}")]
+        public async Task<IActionResult> IsUserOnline(Guid userId)
+        {
+            var isOnline = await _userConnectionService.IsUserOnlineAsync(userId);
+            return Ok(new { userId, isOnline });
+        }
+
     }
 }
