@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35818.85 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Roomify.GP.API", "Roomify.GP.API\Roomify.GP.API.csproj", "{3E41CCA2-67E2-4368-B5C3-56B388EB74A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Roomify.GP.Core", "Roomify.GP.Core\Roomify.GP.Core.csproj", "{9A8B7173-E3C0-4E58-BE3A-4033EF37C763}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Roomify.GP.Repository", "Roomify.GP.Repository\Roomify.GP.Repository.csproj", "{88D3103D-7803-46C3-82DC-7426C6D9ECB0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Roomify.GP.Service", "Roomify.GP.Service\Roomify.GP.Service.csproj", "{1651C94A-ED7F-46BC-987A-09C11A1056B0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3E41CCA2-67E2-4368-B5C3-56B388EB74A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E41CCA2-67E2-4368-B5C3-56B388EB74A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E41CCA2-67E2-4368-B5C3-56B388EB74A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E41CCA2-67E2-4368-B5C3-56B388EB74A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A8B7173-E3C0-4E58-BE3A-4033EF37C763}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A8B7173-E3C0-4E58-BE3A-4033EF37C763}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A8B7173-E3C0-4E58-BE3A-4033EF37C763}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A8B7173-E3C0-4E58-BE3A-4033EF37C763}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88D3103D-7803-46C3-82DC-7426C6D9ECB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88D3103D-7803-46C3-82DC-7426C6D9ECB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88D3103D-7803-46C3-82DC-7426C6D9ECB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88D3103D-7803-46C3-82DC-7426C6D9ECB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1651C94A-ED7F-46BC-987A-09C11A1056B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1651C94A-ED7F-46BC-987A-09C11A1056B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1651C94A-ED7F-46BC-987A-09C11A1056B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1651C94A-ED7F-46BC-987A-09C11A1056B0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B61A40D0-AE3A-42BD-9999-48DA2395D3F5}
+	EndGlobalSection
+EndGlobal

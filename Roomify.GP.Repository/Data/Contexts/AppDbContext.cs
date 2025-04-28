@@ -1,0 +1,61 @@
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using Roomify.GP.Core.Entities;
+using Roomify.GP.Core.Entities.AI.RoomImage;
+using Roomify.GP.Core.Entities.Identity;
+using System.Reflection.Emit;
+
+namespace Roomify.GP.Repository.Data.Contexts
+{
+    public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
+    {
+        public AppDbContext(DbContextOptions<AppDbContext> options)
+            : base(options) { }
+
+        // ✅ كيانات المشروع الأصلية
+        //public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+        public DbSet<RoomImage> RoomImages { get; set; }
+        public DbSet<Description> Descriptions { get; set; }
+        public DbSet<PortfolioPost> PortfolioPosts { get; set; }
+        public DbSet<Message> Messages { get; set; }
+        // ✅ جدول OTP الموحد لتأكيد الإيميل واستعادة الباسورد
+        public DbSet<OtpCode> OtpCodes { get; set; }
+        public DbSet<EmailConfirmationToken> EmailConfirmationTokens { get; set; }
+        public DbSet<UserConnection> UserConnections { get; set; }
+        public DbSet<UserFollow> UserFollows { get; set; }
+        public DbSet<PendingRegistration> PendingRegistrations { get; set; }
+
+            
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            #region FollowSetup
+            builder.Entity<UserFollow>()
+        .HasKey(uf => new { uf.FollowerId, uf.FollowingId });
+
+            builder.Entity<UserFollow>()
+                .HasOne(uf => uf.Follower)
+                .WithMany(u => u.Following)
+                .HasForeignKey(uf => uf.FollowerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<UserFollow>()
+                .HasOne(uf => uf.Following)
+                .WithMany(u => u.Followers)
+                .HasForeignKey(uf => uf.FollowingId)
+                .OnDelete(DeleteBehavior.NoAction);
+            #endregion
+
+
+
+            builder.Entity<EmailConfirmationToken>()
+    .HasOne(e => e.PendingRegistration)
+    .WithMany()
+    .HasForeignKey(e => e.PendingRegistrationId)
+    .OnDelete(DeleteBehavior.Cascade);
+
+        }
+    }
+}
