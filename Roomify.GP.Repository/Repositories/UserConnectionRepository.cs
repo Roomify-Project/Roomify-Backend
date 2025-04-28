@@ -1,4 +1,5 @@
 ﻿// Roomify.GP.Repository/Repositories/UserConnectionRepository.cs
+using Microsoft.EntityFrameworkCore;
 using Roomify.GP.Core.Entities.Identity;
 using Roomify.GP.Core.Repositories.Contract;
 using Roomify.GP.Repository.Data.Contexts;
@@ -28,6 +29,15 @@ namespace Roomify.GP.Repository.Repositories
                 _context.UserConnections.Remove(conn);
                 await _context.SaveChangesAsync();
             }
+
         }
+
+        public async Task<List<UserConnection>> GetByUserIdAsync(Guid userId)
+        {
+            return await _context.UserConnections
+                                 .Where(c => c.UserId == userId)
+                                 .ToListAsync();
+        }
+
     }
 }

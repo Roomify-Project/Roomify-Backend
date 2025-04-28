@@ -7,5 +7,7 @@ namespace Roomify.GP.Core.Repositories.Contract
     {
         Task AddAsync(UserConnection connection);
         Task RemoveAsync(string connectionId);
+        Task<List<UserConnection>> GetByUserIdAsync(Guid userId);
+
     }
 }

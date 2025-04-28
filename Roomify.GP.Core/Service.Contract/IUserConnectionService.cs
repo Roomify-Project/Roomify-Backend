@@ -7,5 +7,7 @@ namespace Roomify.GP.Core.Services.Contract
     {
         Task AddConnectionAsync(UserConnection connection);
         Task RemoveConnectionAsync(string connectionId);
+        Task<bool> IsUserOnlineAsync(Guid userId);
+
     }
 }

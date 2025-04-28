@@ -3,6 +3,7 @@ using Roomify.GP.Core.Entities;
 using System.Threading.Tasks;
 using Roomify.GP.Core.DTOs.ChatModel;
 using Roomify.GP.Core.Service.Contract;
+using Microsoft.EntityFrameworkCore;
 
 public class MessageService :IMessageService
 {
@@ -26,4 +27,24 @@ public class MessageService :IMessageService
         _context.Messages.Add(newMessage);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<List<MessageResponseDto>> GetMessagesAsync(Guid senderId, Guid receiverId)
+
+    {
+        var messages = await _context.Messages
+            .Where(m => (m.SenderId == senderId && m.ReceiverId == receiverId)
+                     || (m.SenderId == receiverId && m.ReceiverId == senderId))
+            .OrderBy(m => m.SentAt)
+            .Select(m => new MessageResponseDto
+            {
+                MessageId = m.Id,
+                SenderId = m.SenderId,
+                Content = m.Content,
+                SentAt = m.SentAt
+            })
+            .ToListAsync();
+
+        return messages;
+    }
+        
 }

@@ -23,5 +23,11 @@ namespace Roomify.GP.Service.Services
         {
             return _repository.RemoveAsync(connectionId);
         }
+        public async Task<bool> IsUserOnlineAsync(Guid userId)
+        {
+            var connections = await _repository.GetByUserIdAsync(userId);
+            return connections.Any();
+        }
+
     }
 }
