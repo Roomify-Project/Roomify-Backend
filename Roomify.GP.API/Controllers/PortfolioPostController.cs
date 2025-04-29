@@ -92,7 +92,8 @@ namespace Roomify.GP.API.Controllers
                 return Ok(new
                 {
                     message = "Post uploaded successfully.",
-                    imageUrl = imageUrl,
+                    ImagePath = imageUrl,
+                    id = post.Id,
                     user = new
                     {
                         id = user.Id,

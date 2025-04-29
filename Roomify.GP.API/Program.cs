@@ -55,7 +55,8 @@ builder.Services.AddScoped<IFollowService, FollowService>();
 builder.Services.AddScoped<IFollowRepository, FollowRepository>();
 builder.Services.AddScoped<MessageService>();
 builder.Services.AddScoped<IPendingRegistrationRepository, PendingRegistrationRepository>();
-
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 
 
 
