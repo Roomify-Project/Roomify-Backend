@@ -46,5 +46,17 @@ public class MessageService :IMessageService
 
         return messages;
     }
-        
+    public async Task<bool> DeleteMessageAsync(Guid messageId, Guid currentUserId)
+    {
+        var message = await _context.Messages.FindAsync(messageId);
+        if (message == null || message.SenderId != currentUserId)
+            return false;
+
+        message.Content = "message is deleted";
+        message.IsDeleted = true;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+
 }
