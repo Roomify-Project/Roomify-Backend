@@ -64,11 +64,31 @@ namespace Roomify.GP.Repository.Migrations
                     SenderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ReceiverId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Messages", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PendingRegistrations",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Bio = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Roles = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PendingRegistrations", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -192,28 +212,6 @@ namespace Roomify.GP.Repository.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "EmailConfirmationTokens",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ExpiryAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsUsed = table.Column<bool>(type: "bit", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_EmailConfirmationTokens", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_EmailConfirmationTokens_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "OtpCodes",
                 columns: table => new
                 {
@@ -305,6 +303,34 @@ namespace Roomify.GP.Repository.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "EmailConfirmationTokens",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpiryAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsUsed = table.Column<bool>(type: "bit", nullable: false),
+                    PendingRegistrationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmailConfirmationTokens", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EmailConfirmationTokens_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_EmailConfirmationTokens_PendingRegistrations_PendingRegistrationId",
+                        column: x => x.PendingRegistrationId,
+                        principalTable: "PendingRegistrations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Descriptions",
                 columns: table => new
                 {
@@ -369,6 +395,11 @@ namespace Roomify.GP.Repository.Migrations
                 table: "Descriptions",
                 column: "RoomImageId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EmailConfirmationTokens_PendingRegistrationId",
+                table: "EmailConfirmationTokens",
+                column: "PendingRegistrationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_EmailConfirmationTokens_UserId",
@@ -440,6 +471,9 @@ namespace Roomify.GP.Repository.Migrations
 
             migrationBuilder.DropTable(
                 name: "RoomImages");
+
+            migrationBuilder.DropTable(
+                name: "PendingRegistrations");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

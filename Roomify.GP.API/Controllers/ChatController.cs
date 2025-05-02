@@ -78,5 +78,21 @@ namespace Roomify.GP.API.Controllers
             return Ok(new { userId, isOnline });
         }
 
+
+        [HttpDelete("delete/{messageId}")]
+        public async Task<IActionResult> DeleteMessage(Guid messageId)
+        {
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(currentUserId, out Guid parsedUserId))
+                return Unauthorized("Invalid user.");
+
+            var result = await _messageService.DeleteMessageAsync(messageId, parsedUserId);
+            if (!result)
+                return NotFound("Message not found or you're not the sender.");
+
+            return Ok("Message deleted successfully.");
+        }
+
+
     }
 }

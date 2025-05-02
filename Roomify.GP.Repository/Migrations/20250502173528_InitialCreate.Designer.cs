@@ -12,7 +12,7 @@ using Roomify.GP.Repository.Data.Contexts;
 namespace Roomify.GP.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250427204342_InitialCreate")]
+    [Migration("20250502173528_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -34,6 +34,9 @@ namespace Roomify.GP.Repository.Migrations
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("ReceiverId")
                         .HasColumnType("uniqueidentifier");
@@ -344,14 +347,60 @@ namespace Roomify.GP.Repository.Migrations
                     b.Property<bool>("IsUsed")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid?>("PendingRegistrationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("PendingRegistrationId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("EmailConfirmationTokens");
+                });
+
+            modelBuilder.Entity("Roomify.GP.Core.Entities.Identity.PendingRegistration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Bio")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Roles")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PendingRegistrations");
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.Identity.UserConnection", b =>
@@ -531,11 +580,16 @@ namespace Roomify.GP.Repository.Migrations
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.Identity.EmailConfirmationToken", b =>
                 {
+                    b.HasOne("Roomify.GP.Core.Entities.Identity.PendingRegistration", "PendingRegistration")
+                        .WithMany()
+                        .HasForeignKey("PendingRegistrationId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("Roomify.GP.Core.Entities.Identity.ApplicationUser", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("PendingRegistration");
 
                     b.Navigation("User");
                 });

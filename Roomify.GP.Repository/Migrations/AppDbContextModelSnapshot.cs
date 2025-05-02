@@ -32,6 +32,9 @@ namespace Roomify.GP.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<Guid>("ReceiverId")
                         .HasColumnType("uniqueidentifier");
 
