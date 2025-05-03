@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Roomify.GP.Repository.Data.Contexts;
 
@@ -11,9 +12,11 @@ using Roomify.GP.Repository.Data.Contexts;
 namespace Roomify.GP.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250503194003_AddAttachmentUrlToMessages")]
+    partial class AddAttachmentUrlToMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -240,40 +243,6 @@ namespace Roomify.GP.Repository.Migrations
                     b.HasIndex("ApplicationUserId");
 
                     b.ToTable("RoomImages");
-                });
-
-            modelBuilder.Entity("Roomify.GP.Core.Entities.Comment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ApplicationUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("PortfolioPostId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicationUserId");
-
-                    b.HasIndex("PortfolioPostId");
-
-                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.Identity.ApplicationUser", b =>
@@ -610,25 +579,6 @@ namespace Roomify.GP.Repository.Migrations
                         .IsRequired();
 
                     b.Navigation("ApplicationUser");
-                });
-
-            modelBuilder.Entity("Roomify.GP.Core.Entities.Comment", b =>
-                {
-                    b.HasOne("Roomify.GP.Core.Entities.Identity.ApplicationUser", "ApplicationUser")
-                        .WithMany()
-                        .HasForeignKey("ApplicationUserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("Roomify.GP.Core.Entities.PortfolioPost", "PortfolioPost")
-                        .WithMany()
-                        .HasForeignKey("PortfolioPostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ApplicationUser");
-
-                    b.Navigation("PortfolioPost");
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.Identity.EmailConfirmationToken", b =>
