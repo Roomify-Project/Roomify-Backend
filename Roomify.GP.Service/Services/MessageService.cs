@@ -18,7 +18,7 @@ public class MessageService : IMessageService
 
     public async Task<string?> SaveMessageAsync(ChatModel chatmodel)
     {
-        string? attachmentUrl = null;
+        string? attachmentUrl = null;   
 
         // ✅ رفع الصورة لو موجودة
         if (chatmodel.File != null && chatmodel.File.Length > 0)
@@ -71,4 +71,35 @@ public class MessageService : IMessageService
         await _context.SaveChangesAsync();
         return true;
     }
+    public async Task<MessageResponseDto> SaveMessageAndReturnAsync(ChatModel chatModel)
+    {
+        string? attachmentUrl = null;
+
+        if (chatModel.File != null && chatModel.File.Length > 0)
+        {
+            attachmentUrl = await _cloudinaryService.UploadImageAsync(chatModel.File);
+        }
+
+        var newMessage = new Message
+        {
+            SenderId = chatModel.SenderId,
+            ReceiverId = chatModel.ReceiverId,
+            Content = chatModel.Message ?? "",
+            SentAt = DateTime.UtcNow,
+            AttachmentUrl = attachmentUrl
+        };
+
+        _context.Messages.Add(newMessage);
+        await _context.SaveChangesAsync();
+
+        return new MessageResponseDto
+        {
+            MessageId = newMessage.Id,
+            SenderId = newMessage.SenderId,
+            Content = newMessage.Content,
+            SentAt = newMessage.SentAt,
+            AttachmentUrl = newMessage.AttachmentUrl
+        };
+    }
+
 }

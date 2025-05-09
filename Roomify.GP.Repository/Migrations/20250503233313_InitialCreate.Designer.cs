@@ -12,8 +12,8 @@ using Roomify.GP.Repository.Data.Contexts;
 namespace Roomify.GP.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250429080931_InitCreate")]
-    partial class InitCreate
+    [Migration("20250503233313_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -31,9 +31,15 @@ namespace Roomify.GP.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AttachmentUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("ReceiverId")
                         .HasColumnType("uniqueidentifier");

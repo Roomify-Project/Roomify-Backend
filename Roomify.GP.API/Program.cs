@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Roomify.GP.API.Hubs;
-using Roomify.GP.API.Middlewares;
 using Roomify.GP.Core.Entities.Identity;
 using Roomify.GP.Core.Repositories.Contract;
 using Roomify.GP.Core.Service.Contract;
@@ -21,6 +20,8 @@ using System.Text.Json.Serialization;
 using CloudinaryDotNet;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authorization;
+using Roomify.GP.API.Middlewares.Errors;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,6 +79,23 @@ builder.Services.ConfigureApplicationCookie(options =>
         return Task.CompletedTask;
     };
 });
+
+
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState
+            .Where(x => x.Value?.Errors.Count > 0)
+            .SelectMany(x => x.Value!.Errors)
+            .Select(e => e.ErrorMessage)
+            .ToList();
+
+        var errorResponse = new ApiErrorResponse(400, "One or more validation errors occurred.", errors);
+        return new BadRequestObjectResult(errorResponse);
+    };
+});
+
 
 // JWT Settings
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
@@ -220,14 +238,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("CorsPolicy");
 app.UseHttpsRedirection();
+
+app.UseMiddleware<ExceptionMiddleware>(); // هنا مرة واحدة بس
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Endpoints
 app.MapControllers();
 app.MapHub<PrivateChatHub>("/chat")
     .RequireAuthorization(new AuthorizeAttribute { Roles = "NormalUser,InteriorDesigner" });
-
 
 app.Run();
