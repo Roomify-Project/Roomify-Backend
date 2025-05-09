@@ -28,28 +28,37 @@ namespace Roomify.GP.API.Controllers
             _userConnectionService = userConnectionService;
         }
 
-        [HttpPost("sendMessage")]
-        [RequestSizeLimit(10 * 1024 * 1024)] // لو عايز تحدد الحجم المسموح للملف
-        public async Task<IActionResult> SendMessage([FromForm] ChatModel chatModel)
+       [HttpPost("sendMessage")]
+[RequestSizeLimit(10 * 1024 * 1024)]
+public async Task<IActionResult> SendMessage([FromForm] ChatModel chatModel)
+{
+    var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (currentUserId != chatModel.SenderId.ToString())
+        return Unauthorized("You are not authorized to send this message.");
+
+    if (chatModel.SenderId == Guid.Empty || chatModel.ReceiverId == Guid.Empty)
+        return BadRequest("SenderId and ReceiverId must be valid.");
+
+    // Save message and get full info back including ID and AttachmentUrl
+    var savedMessage = await _messageService.SaveMessageAndReturnAsync(chatModel); // Ensure this method exists
+
+    // Send message to receiver over SignalR
+    await _hubContext.Clients.User(chatModel.ReceiverId.ToString())
+        .SendAsync("ReceiveMessage", new
         {
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (currentUserId != chatModel.SenderId.ToString())
-                return Unauthorized("You are not authorized to send this message.");
+            messageId = savedMessage.MessageId,
+            content = savedMessage.Content,
+            attachmentUrl = savedMessage.AttachmentUrl,
+            senderId = savedMessage.SenderId,
+            sentAt = savedMessage.SentAt
+        });
 
-            if (chatModel.SenderId == Guid.Empty || chatModel.ReceiverId == Guid.Empty)
-                return BadRequest("SenderId and ReceiverId must be valid.");
-
-            var attachmentUrl = await _messageService.SaveMessageAsync(chatModel);
-
-            await _hubContext.Clients.User(chatModel.ReceiverId.ToString())
-                .SendAsync("ReceiveMessage", chatModel.Message, attachmentUrl);
-
-            return Ok(new
-            {
-                message = "Message sent successfully.",
-                attachmentUrl = attachmentUrl
-            });
-        }
+    return Ok(new
+    {
+        message = "Message sent successfully.",
+        data = savedMessage
+    });
+}
 
         [HttpGet("getMessages/{userId}")]
         public async Task<IActionResult> GetMessages(Guid userId)

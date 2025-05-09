@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Roomify.GP.Core.DTOs.ApplicationUser;
+using Roomify.GP.Core.DTOs.Comment;
 using Roomify.GP.Core.DTOs.PortfolioPost;
 using Roomify.GP.Core.DTOs.User;
 using Roomify.GP.Core.Entities;
@@ -27,6 +28,20 @@ namespace Roomify.GP.Service.Mappings
 
             CreateMap<PortfolioPost, PortfolioPostResponseDto>();
 
+            // Comment mappings
+            CreateMap<CommentCreateDto, Comment>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+                .ForMember(dest => dest.ApplicationUserId, opt => opt.Ignore())
+                .ForMember(dest => dest.ApplicationUser, opt => opt.Ignore())
+                .ForMember(dest => dest.PortfolioPost, opt => opt.Ignore());
+
+            CreateMap<Comment, CommentResponseDto>()
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.ApplicationUserId))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.ApplicationUser.UserName))
+                .ForMember(dest => dest.UserProfilePicture, opt => opt.MapFrom(src => src.ApplicationUser.ProfilePicture));
         }
     }
 }

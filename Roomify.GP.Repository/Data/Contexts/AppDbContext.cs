@@ -25,15 +25,16 @@ namespace Roomify.GP.Repository.Data.Contexts
         public DbSet<UserConnection> UserConnections { get; set; }
         public DbSet<UserFollow> UserFollows { get; set; }
         public DbSet<PendingRegistration> PendingRegistrations { get; set; }
+        public DbSet<Comment> Comments { get; set; }
 
-            
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
             #region FollowSetup
             builder.Entity<UserFollow>()
-        .HasKey(uf => new { uf.FollowerId, uf.FollowingId });
+                .HasKey(uf => new { uf.FollowerId, uf.FollowingId });
 
             builder.Entity<UserFollow>()
                 .HasOne(uf => uf.Follower)
@@ -48,13 +49,28 @@ namespace Roomify.GP.Repository.Data.Contexts
                 .OnDelete(DeleteBehavior.NoAction);
             #endregion
 
+            #region CommentSetup
+            builder.Entity<Comment>()
+                .HasOne(c => c.ApplicationUser)
+                .WithMany()
+                .HasForeignKey(c => c.ApplicationUserId)
+                .OnDelete(DeleteBehavior.NoAction); // Prevent cascade deletion with post
 
+            builder.Entity<Comment>()
+                .HasOne(c => c.PortfolioPost)
+                .WithMany()
+                .HasForeignKey(c => c.PortfolioPostId)
+                .OnDelete(DeleteBehavior.Cascade); // Delete comments when post is deleted
+            #endregion
 
+            #region Emailconfirmation
             builder.Entity<EmailConfirmationToken>()
-    .HasOne(e => e.PendingRegistration)
-    .WithMany()
-    .HasForeignKey(e => e.PendingRegistrationId)
-    .OnDelete(DeleteBehavior.Cascade);
+                .HasOne(e => e.PendingRegistration)
+                .WithMany()
+                .HasForeignKey(e => e.PendingRegistrationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            #endregion
+
 
         }
     }
