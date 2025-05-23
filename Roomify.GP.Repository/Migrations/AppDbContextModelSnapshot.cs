@@ -455,6 +455,38 @@ namespace Roomify.GP.Repository.Migrations
                     b.ToTable("UserConnections");
                 });
 
+            modelBuilder.Entity("Roomify.GP.Core.Entities.Notification.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("RelatedItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("Roomify.GP.Core.Entities.OtpCode", b =>
                 {
                     b.Property<Guid>("Id")
@@ -640,6 +672,17 @@ namespace Roomify.GP.Repository.Migrations
                         .HasForeignKey("UserId");
 
                     b.Navigation("PendingRegistration");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Roomify.GP.Core.Entities.Notification.Notification", b =>
+                {
+                    b.HasOne("Roomify.GP.Core.Entities.Identity.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });

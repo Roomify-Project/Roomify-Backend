@@ -1,10 +1,12 @@
 ﻿using AutoMapper;
 using Roomify.GP.Core.DTOs.ApplicationUser;
 using Roomify.GP.Core.DTOs.Comment;
+using Roomify.GP.Core.DTOs.Notification;
 using Roomify.GP.Core.DTOs.PortfolioPost;
 using Roomify.GP.Core.DTOs.User;
 using Roomify.GP.Core.Entities;
 using Roomify.GP.Core.Entities.Identity;
+using Roomify.GP.Core.Entities.Notification;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Roomify.GP.Service.Mappings
@@ -42,6 +44,10 @@ namespace Roomify.GP.Service.Mappings
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.ApplicationUserId))
                 .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.ApplicationUser.UserName))
                 .ForMember(dest => dest.UserProfilePicture, opt => opt.MapFrom(src => src.ApplicationUser.ProfilePicture));
+
+
+            CreateMap<Notification, NotificationDto>();
+            CreateMap<NotificationDto, Notification>();
         }
     }
 }

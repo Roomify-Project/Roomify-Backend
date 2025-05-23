@@ -58,8 +58,10 @@ builder.Services.AddScoped<IPendingRegistrationRepository, PendingRegistrationRe
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 
-
-
+// Register Notification dependencies
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<INotificationSender, DefaultNotificationSender>();
 
 builder.Services.AddAuthorization(); // لازم جداً
 
@@ -109,7 +111,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             {
                 var accessToken = context.Request.Query["access_token"];
                 var path = context.HttpContext.Request.Path;
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chat"))
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    (path.StartsWithSegments("/chat") || path.StartsWithSegments("/notificationHub")))
                 {
                     context.Token = accessToken;
                 }
@@ -229,5 +232,7 @@ app.MapControllers();
 app.MapHub<PrivateChatHub>("/chat")
     .RequireAuthorization(new AuthorizeAttribute { Roles = "NormalUser,InteriorDesigner" });
 
+app.MapHub<NotificationHub>("/notificationHub")
+    .RequireAuthorization(new AuthorizeAttribute { Roles = "NormalUser,InteriorDesigner" });
 
 app.Run();

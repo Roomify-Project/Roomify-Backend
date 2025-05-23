@@ -6,6 +6,7 @@ using Roomify.GP.Core.Entities;
 using Roomify.GP.Core.Entities.Identity;
 using Roomify.GP.Core.Repositories.Contract;
 using Roomify.GP.Core.Service.Contract;
+using Roomify.GP.Core.Services.Contract;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,19 +21,22 @@ namespace Roomify.GP.Service.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<CommentService> _logger;
+        private readonly INotificationService _notificationService;
 
         public CommentService(
             ICommentRepository commentRepository,
             IPortfolioPostRepository postRepository,
             UserManager<ApplicationUser> userManager,
             IMapper mapper,
-            ILogger<CommentService> logger)
+            ILogger<CommentService> logger,
+            INotificationService notificationService)
         {
             _commentRepository = commentRepository;
             _postRepository = postRepository;
             _userManager = userManager;
             _mapper = mapper;
             _logger = logger;
+            _notificationService = notificationService;
         }
 
         public async Task<IEnumerable<CommentResponseDto>> GetAllByPostIdAsync(Guid postId)
@@ -54,6 +58,7 @@ namespace Roomify.GP.Service.Services
                 _logger.LogInformation("Starting to add comment for user {UserId} on post {PostId}",
                     userId, commentDto.PortfolioPostId);
 
+                // التحقق من وجود المنشور
                 var post = await _postRepository.GetByIdAsync(commentDto.PortfolioPostId);
                 if (post == null)
                 {
@@ -61,6 +66,7 @@ namespace Roomify.GP.Service.Services
                     throw new ApplicationException("Portfolio post not found.");
                 }
 
+                // التحقق من وجود المستخدم
                 var user = await _userManager.FindByIdAsync(userId.ToString());
                 if (user == null)
                 {
@@ -68,6 +74,7 @@ namespace Roomify.GP.Service.Services
                     throw new ApplicationException("User not found.");
                 }
 
+                // إنشاء وحفظ التعليق
                 var comment = new Comment
                 {
                     Content = commentDto.Content,
@@ -79,9 +86,22 @@ namespace Roomify.GP.Service.Services
                 await _commentRepository.AddAsync(comment);
                 _logger.LogInformation("Comment {CommentId} successfully added", comment.Id);
 
-                // Ensure we have navigation properties for response
+                // تعيين خصائص التنقل للاستجابة
                 comment.ApplicationUser = user;
                 comment.PortfolioPost = post;
+
+                // إرسال إشعار لصاحب المنشور إذا كان المعلّق مختلف عن صاحب المنشور
+                if (post.ApplicationUserId != userId)
+                {
+                    await _notificationService.CreateCommentNotificationAsync(
+                        post.ApplicationUserId,
+                        userId,
+                        user.UserName,
+                        post.Id);
+
+                    _logger.LogInformation("Notification sent to post owner {OwnerId} about new comment {CommentId}",
+                        post.ApplicationUserId, comment.Id);
+                }
 
                 return MapToResponseDto(comment);
             }
