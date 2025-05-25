@@ -1,4 +1,4 @@
-﻿    using Roomify.GP.Repository.Data.Contexts;
+using Roomify.GP.Repository.Data.Contexts;
 using Roomify.GP.Core.Entities;
 using System.Threading.Tasks;
 using Roomify.GP.Core.DTOs.ChatModel;
@@ -15,30 +15,45 @@ public class MessageService : IMessageService
     private readonly AppDbContext _context;
     private readonly INotificationService _notificationService;
     private readonly IUserRepository _userRepository;
+    private readonly ICloudinaryService _cloudinaryService;
 
     public MessageService(
         AppDbContext context,
         INotificationService notificationService,
-        IUserRepository userRepository)
+        IUserRepository userRepository, 
+        ICloudinaryService cloudinaryService)
     {
         _context = context;
         _notificationService = notificationService;
         _userRepository = userRepository;
-    }
+        _cloudinaryService = cloudinaryService;
+        
 
-    public async Task SaveMessage(ChatModel chatmodel)
+
+    public async Task<string?> SaveMessageAsync(ChatModel chatmodel)
     {
         // إنشاء وحفظ الرسالة
+
+        string? attachmentUrl = null;   
+
+        // ✅ رفع الصورة لو موجودة
+        if (chatmodel.File != null && chatmodel.File.Length > 0)
+        {
+            attachmentUrl = await _cloudinaryService.UploadImageAsync(chatmodel.File);
+        }
+
         var newMessage = new Message
         {
             SenderId = chatmodel.SenderId,
             ReceiverId = chatmodel.ReceiverId,
-            Content = chatmodel.Message,
-            SentAt = DateTime.UtcNow
+            Content = chatmodel.Message ?? "",
+            SentAt = DateTime.UtcNow,
+            AttachmentUrl = attachmentUrl
         };
 
         _context.Messages.Add(newMessage);
         await _context.SaveChangesAsync();
+
 
         // بعد نجاح حفظ الرسالة، إرسال إشعار للمستلم
         var sender = await _userRepository.GetUserByIdAsync(chatmodel.SenderId);
@@ -49,6 +64,7 @@ public class MessageService : IMessageService
                 chatmodel.SenderId,
                 sender.UserName);
         }
+        return attachmentUrl;
     }
 
     public async Task<List<MessageResponseDto>> GetMessagesAsync(Guid senderId, Guid receiverId)
@@ -62,7 +78,8 @@ public class MessageService : IMessageService
                 MessageId = m.Id,
                 SenderId = m.SenderId,
                 Content = m.Content,
-                SentAt = m.SentAt
+                SentAt = m.SentAt,
+                AttachmentUrl = m.AttachmentUrl
             })
             .ToListAsync();
 
@@ -80,4 +97,36 @@ public class MessageService : IMessageService
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<MessageResponseDto> SaveMessageAndReturnAsync(ChatModel chatModel)
+    {
+        string? attachmentUrl = null;
+
+        if (chatModel.File != null && chatModel.File.Length > 0)
+        {
+            attachmentUrl = await _cloudinaryService.UploadImageAsync(chatModel.File);
+        }
+
+        var newMessage = new Message
+        {
+            SenderId = chatModel.SenderId,
+            ReceiverId = chatModel.ReceiverId,
+            Content = chatModel.Message ?? "",
+            SentAt = DateTime.UtcNow,
+            AttachmentUrl = attachmentUrl
+        };
+
+        _context.Messages.Add(newMessage);
+        await _context.SaveChangesAsync();
+
+        return new MessageResponseDto
+        {
+            MessageId = newMessage.Id,
+            SenderId = newMessage.SenderId,
+            Content = newMessage.Content,
+            SentAt = newMessage.SentAt,
+            AttachmentUrl = newMessage.AttachmentUrl
+        };
+    }
+
 }

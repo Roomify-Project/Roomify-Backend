@@ -44,7 +44,7 @@ namespace Roomify.GP.API.Hubs
                 throw new HubException("Receiver ID cannot be empty.");
             }
 
-            await _messageService.SaveMessage(chatModel);
+            await _messageService.SaveMessageAsync(chatModel);
 
             await Clients.User(chatModel.ReceiverId.ToString())
                          .SendAsync("ReceiveMessage", chatModel.Message);
