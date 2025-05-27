@@ -22,6 +22,7 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Roomify.GP.API.Middlewares.Errors;
 using Microsoft.AspNetCore.Mvc;
+using Roomify.GP.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,9 +59,9 @@ builder.Services.AddScoped<MessageService>();
 builder.Services.AddScoped<IPendingRegistrationRepository, PendingRegistrationRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
-
-
-
+builder.Services.AddScoped<INotificationBroadcaster, NotificationBroadcaster>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddAuthorization(); // لازم جداً
 
@@ -68,7 +69,6 @@ builder.Services.AddAuthorization(); // لازم جداً
 builder.Services.AddIdentityCore<ApplicationUser>(options => { })
     .AddRoles<IdentityRole<Guid>>()
     .AddEntityFrameworkStores<AppDbContext>();
-
 
 // منع Redirect على /Account/Login
 builder.Services.ConfigureApplicationCookie(options =>
@@ -79,7 +79,6 @@ builder.Services.ConfigureApplicationCookie(options =>
         return Task.CompletedTask;
     };
 });
-
 
 builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
@@ -95,7 +94,6 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
         return new BadRequestObjectResult(errorResponse);
     };
 });
-
 
 // JWT Settings
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
@@ -198,6 +196,12 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
 // Apply migrations and create roles
 using (var scope = app.Services.CreateScope())
 {
@@ -229,24 +233,17 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Middleware
-app.UseMiddleware<ExceptionMiddleware>();
 app.UseCors("CorsPolicy");
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseCors("CorsPolicy");
-app.UseHttpsRedirection();
-
-app.UseMiddleware<ExceptionMiddleware>(); // هنا مرة واحدة بس
+app.UseMiddleware<ExceptionMiddleware>(); // واحدة بس
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
 app.MapHub<PrivateChatHub>("/chat")
+    .RequireAuthorization(new AuthorizeAttribute { Roles = "NormalUser,InteriorDesigner" });
+
+app.MapHub<NotificationHub>("/notificationHub")
     .RequireAuthorization(new AuthorizeAttribute { Roles = "NormalUser,InteriorDesigner" });
 
 app.Run();
