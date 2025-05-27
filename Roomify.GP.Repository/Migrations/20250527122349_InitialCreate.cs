@@ -12,6 +12,19 @@ namespace Roomify.GP.Repository.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "AIResults",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    GeneratedImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AIResults", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
                 {
@@ -140,6 +153,27 @@ namespace Roomify.GP.Repository.Migrations
                         name: "FK_AspNetRoleClaims_AspNetRoles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "AspNetRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AIResultHistories",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    GeneratedImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ApplicationUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PromptId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AIResultHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AIResultHistories_AspNetUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -281,9 +315,6 @@ namespace Roomify.GP.Repository.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Length = table.Column<double>(type: "float", nullable: false),
-                    Width = table.Column<double>(type: "float", nullable: false),
-                    Height = table.Column<double>(type: "float", nullable: false),
                     ApplicationUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
@@ -291,6 +322,26 @@ namespace Roomify.GP.Repository.Migrations
                     table.PrimaryKey("PK_RoomImages", x => x.Id);
                     table.ForeignKey(
                         name: "FK_RoomImages_AspNetUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SavedDesigns",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    GeneratedImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SavedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ApplicationUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SavedDesigns", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SavedDesigns_AspNetUsers_ApplicationUserId",
                         column: x => x.ApplicationUserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -377,25 +428,35 @@ namespace Roomify.GP.Repository.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Descriptions",
+                name: "Prompts",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     DescriptionText = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     RoomStyle = table.Column<int>(type: "int", nullable: false),
                     RoomType = table.Column<int>(type: "int", nullable: false),
-                    RoomImageId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    RoomImageId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    AIResultHistoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Descriptions", x => x.Id);
+                    table.PrimaryKey("PK_Prompts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Descriptions_RoomImages_RoomImageId",
+                        name: "FK_Prompts_AIResultHistories_AIResultHistoryId",
+                        column: x => x.AIResultHistoryId,
+                        principalTable: "AIResultHistories",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Prompts_RoomImages_RoomImageId",
                         column: x => x.RoomImageId,
                         principalTable: "RoomImages",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AIResultHistories_ApplicationUserId",
+                table: "AIResultHistories",
+                column: "ApplicationUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -447,12 +508,6 @@ namespace Roomify.GP.Repository.Migrations
                 column: "PortfolioPostId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Descriptions_RoomImageId",
-                table: "Descriptions",
-                column: "RoomImageId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_EmailConfirmationTokens_PendingRegistrationId",
                 table: "EmailConfirmationTokens",
                 column: "PendingRegistrationId");
@@ -473,8 +528,27 @@ namespace Roomify.GP.Repository.Migrations
                 column: "ApplicationUserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Prompts_AIResultHistoryId",
+                table: "Prompts",
+                column: "AIResultHistoryId",
+                unique: true,
+                filter: "[AIResultHistoryId] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Prompts_RoomImageId",
+                table: "Prompts",
+                column: "RoomImageId",
+                unique: true,
+                filter: "[RoomImageId] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RoomImages_ApplicationUserId",
                 table: "RoomImages",
+                column: "ApplicationUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SavedDesigns_ApplicationUserId",
+                table: "SavedDesigns",
                 column: "ApplicationUserId");
 
             migrationBuilder.CreateIndex(
@@ -486,6 +560,9 @@ namespace Roomify.GP.Repository.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "AIResults");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -505,9 +582,6 @@ namespace Roomify.GP.Repository.Migrations
                 name: "Comments");
 
             migrationBuilder.DropTable(
-                name: "Descriptions");
-
-            migrationBuilder.DropTable(
                 name: "EmailConfirmationTokens");
 
             migrationBuilder.DropTable(
@@ -518,6 +592,12 @@ namespace Roomify.GP.Repository.Migrations
 
             migrationBuilder.DropTable(
                 name: "OtpCodes");
+
+            migrationBuilder.DropTable(
+                name: "Prompts");
+
+            migrationBuilder.DropTable(
+                name: "SavedDesigns");
 
             migrationBuilder.DropTable(
                 name: "UserConnections");
@@ -532,10 +612,13 @@ namespace Roomify.GP.Repository.Migrations
                 name: "PortfolioPosts");
 
             migrationBuilder.DropTable(
-                name: "RoomImages");
+                name: "PendingRegistrations");
 
             migrationBuilder.DropTable(
-                name: "PendingRegistrations");
+                name: "AIResultHistories");
+
+            migrationBuilder.DropTable(
+                name: "RoomImages");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
