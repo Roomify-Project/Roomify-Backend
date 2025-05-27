@@ -13,12 +13,8 @@ namespace Roomify.GP.Core.Entities.AI.RoomImage
         public string ImagePath { get; set; }
         public DateTime CreatedDate { get; set; }
 
-        // Dimensions
-        public double Length { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
 
-        public virtual Description Description { get; set; }
+        public virtual Prompt Prompt { get; set; }
 
         // Navigation Properties
         public Guid ApplicationUserId { get; set; }    // FK

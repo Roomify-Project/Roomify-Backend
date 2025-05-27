@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Roomify.GP.Repository.Data.Contexts;
 
@@ -11,9 +12,11 @@ using Roomify.GP.Repository.Data.Contexts;
 namespace Roomify.GP.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250506144140_AIMig")]
+    partial class AIMig
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -212,9 +215,6 @@ namespace Roomify.GP.Repository.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("PromptId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationUserId");
@@ -246,9 +246,7 @@ namespace Roomify.GP.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AIResultHistoryId")
-                        .IsUnique()
-                        .HasFilter("[AIResultHistoryId] IS NOT NULL");
+                    b.HasIndex("AIResultHistoryId");
 
                     b.HasIndex("RoomImageId")
                         .IsUnique()
@@ -665,8 +663,8 @@ namespace Roomify.GP.Repository.Migrations
             modelBuilder.Entity("Roomify.GP.Core.Entities.AI.RoomImage.Prompt", b =>
                 {
                     b.HasOne("Roomify.GP.Core.Entities.AI.AIResultHistory", "AIResultHistory")
-                        .WithOne("Prompt")
-                        .HasForeignKey("Roomify.GP.Core.Entities.AI.RoomImage.Prompt", "AIResultHistoryId");
+                        .WithMany()
+                        .HasForeignKey("AIResultHistoryId");
 
                     b.HasOne("Roomify.GP.Core.Entities.AI.RoomImage.RoomImage", "RoomImage")
                         .WithOne("Prompt")
@@ -773,12 +771,6 @@ namespace Roomify.GP.Repository.Migrations
                     b.Navigation("Follower");
 
                     b.Navigation("Following");
-                });
-
-            modelBuilder.Entity("Roomify.GP.Core.Entities.AI.AIResultHistory", b =>
-                {
-                    b.Navigation("Prompt")
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.AI.RoomImage.RoomImage", b =>

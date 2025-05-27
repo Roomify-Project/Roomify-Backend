@@ -21,6 +21,8 @@ using System.Text.Json.Serialization;
 using CloudinaryDotNet;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authorization;
+using Roomify.GP.Core.Background_Services;
+using Roomify.GP.API.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,7 +60,17 @@ builder.Services.AddScoped<IPendingRegistrationRepository, PendingRegistrationRe
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 
+// AI DI:
+builder.Services.AddScoped<IRoomImageRepository, RoomImageRepository>();
+builder.Services.AddScoped<IRoomImageService, RoomImageService>();
+builder.Services.AddScoped<IPromptRepository, PromptRepository>();
+builder.Services.AddScoped<IAIResultHistoryRepository, AIResultHistoryRepository>();
+builder.Services.AddScoped<ISavedDesignRepository, SavedDesignRepository>();
+builder.Services.AddHostedService<CleanupService>();  // Background service to clean up expired designs
 
+
+// Register CleanupService singleton for background cleanup
+builder.Services.AddSingleton<CleanupService>();
 
 
 builder.Services.AddAuthorization(); // لازم جداً
@@ -161,6 +173,12 @@ builder.Services.AddSwaggerGen(c =>
         In = ParameterLocation.Header,
         Description = "Enter your JWT token in the format: Bearer {your token}"
     });
+
+    // Add this section to handle file uploads
+    c.OperationFilter<FileUploadOperationFilter>();
+
+    // Add support for file uploads
+    c.OperationFilter<SwaggerFileOperationFilter>();
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
