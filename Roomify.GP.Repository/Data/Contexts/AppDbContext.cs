@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Roomify.GP.Core.Entities;
+using Roomify.GP.Core.Entities.AI;
 using Roomify.GP.Core.Entities.AI.RoomImage;
 using Roomify.GP.Core.Entities.Identity;
 using System.Reflection.Emit;
@@ -16,7 +17,10 @@ namespace Roomify.GP.Repository.Data.Contexts
         // ✅ كيانات المشروع الأصلية
         //public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
         public DbSet<RoomImage> RoomImages { get; set; }
-        public DbSet<Description> Descriptions { get; set; }
+        public DbSet<Prompt> Prompts { get; set; }
+        public DbSet<AIResult> AIResults { get; set; }
+        public DbSet<AIResultHistory> AIResultHistories { get; set; }
+        public DbSet<SavedDesign> SavedDesigns { get; set; }
         public DbSet<PortfolioPost> PortfolioPosts { get; set; }
         public DbSet<Message> Messages { get; set; }
         // ✅ جدول OTP الموحد لتأكيد الإيميل واستعادة الباسورد
