@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -20,9 +20,12 @@ using System.Text.Json.Serialization;
 using CloudinaryDotNet;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authorization;
+using Roomify.GP.Core.Background_Services;
+using Roomify.GP.API.Filters;
 using Roomify.GP.API.Middlewares.Errors;
 using Microsoft.AspNetCore.Mvc;
 using Roomify.GP.API.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,9 +62,22 @@ builder.Services.AddScoped<MessageService>();
 builder.Services.AddScoped<IPendingRegistrationRepository, PendingRegistrationRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
+
 builder.Services.AddScoped<INotificationBroadcaster, NotificationBroadcaster>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// AI DI:
+builder.Services.AddScoped<IRoomImageRepository, RoomImageRepository>();
+builder.Services.AddScoped<IRoomImageService, RoomImageService>();
+builder.Services.AddScoped<IPromptRepository, PromptRepository>();
+builder.Services.AddScoped<IAIResultHistoryRepository, AIResultHistoryRepository>();
+builder.Services.AddScoped<ISavedDesignRepository, SavedDesignRepository>();
+builder.Services.AddHostedService<CleanupService>();  // Background service to clean up expired designs
+
+// Register CleanupService singleton for background cleanup
+builder.Services.AddSingleton<CleanupService>();
+
 
 builder.Services.AddAuthorization(); // لازم جداً
 
@@ -177,6 +193,12 @@ builder.Services.AddSwaggerGen(c =>
         In = ParameterLocation.Header,
         Description = "Enter your JWT token in the format: Bearer {your token}"
     });
+
+    // Add this section to handle file uploads
+    c.OperationFilter<FileUploadOperationFilter>();
+
+    // Add support for file uploads
+    c.OperationFilter<SwaggerFileOperationFilter>();
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
