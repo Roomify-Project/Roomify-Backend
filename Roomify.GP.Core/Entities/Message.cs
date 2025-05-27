@@ -7,7 +7,7 @@ public class Message
     public Guid ReceiverId { get; set; } // ID المستقبل (تأكد من أنه من نوع string)
     public string Content { get; set; }   // محتوى الرسالة
     public DateTime SentAt { get; set; }  // وقت إرسال الرسالة
+    public bool IsDeleted { get; set; } = false;
+    public string? AttachmentUrl { get; set; }
 
-  
-   
 }

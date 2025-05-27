@@ -7,12 +7,11 @@ using Microsoft.AspNetCore.Http;
 using Roomify.GP.Core.Entities.Identity;
 using Roomify.GP.Core.Services.Contract;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Roomify.GP.API.Controllers
 {
-
     [Authorize(Roles = "NormalUser,InteriorDesigner")]
-
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
@@ -40,17 +39,22 @@ namespace Roomify.GP.API.Controllers
             return user is null ? NotFound() : Ok(user);
         }
 
-        [HttpPut("{id:guid}")]
-        public async Task<IActionResult> UpdateUser(Guid id, UserUpdateDto dto)
+        [HttpPut("update-profile")]
+        public async Task<IActionResult> UpdateProfile([FromForm] UserUpdateDto dto)
         {
-            var user = await _userService.GetUserByIdAsync(id);
-            if (user == null) return NotFound();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(userId, out var parsedUserId))
+                return Unauthorized();
 
-            if (!user.EmailConfirmed)
-                return BadRequest("Email not confirmed.");
+            var profileImageUrl = await _userService.UpdateUserAsync(parsedUserId, dto);
 
-            var updated = await _userService.UpdateUserAsync(id, dto);
-            return updated == null ? NotFound() : Ok(updated);
+            var updatedUser = await _userService.GetUserByIdAsync(parsedUserId);
+            return Ok(new
+            {
+                message = "User profile updated successfully.",
+                user = updatedUser
+            });
+
         }
 
         [HttpDelete("{id:guid}")]
@@ -65,6 +69,5 @@ namespace Roomify.GP.API.Controllers
             var result = await _userService.DeleteUserAsync(id);
             return result ? Ok("User deleted successfully") : NotFound();
         }
-
     }
 }
