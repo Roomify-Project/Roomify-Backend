@@ -17,16 +17,18 @@ namespace Roomify.GP.Service.Mappings
             CreateMap<UserCreateDto, ApplicationUser>();
             CreateMap<UserUpdateDto, ApplicationUser>();
             CreateMap<ApplicationUser, UserWithRolesDto>()
-           .ForMember(dest => dest.Role, opt => opt.Ignore())
-           .ForMember(dest => dest.EmailConfirmed, opt => opt.MapFrom(src => src.EmailConfirmed));
+                .ForMember(dest => dest.Role, opt => opt.Ignore())
+                .ForMember(dest => dest.EmailConfirmed, opt => opt.MapFrom(src => src.EmailConfirmed));
 
             CreateMap<PortfolioPostDto, PortfolioPost>()
-            .ForMember(dest => dest.ImagePath, options => options.Ignore())
-            .ForMember(dest => dest.Id, options => options.Ignore())
-            .ForMember(dest => dest.CreatedAt, options => options.Ignore())
-            .ForMember(dest => dest.ApplicationUser, options => options.Ignore());
+                .ForMember(dest => dest.ImagePath, options => options.Ignore())
+                .ForMember(dest => dest.Id, options => options.Ignore())
+                .ForMember(dest => dest.CreatedAt, options => options.Ignore())
+                .ForMember(dest => dest.ApplicationUser, options => options.Ignore());
 
-            CreateMap<PortfolioPost, PortfolioPostResponseDto>();
+            CreateMap<PortfolioPost, PortfolioPostResponseDto>()
+                .ForMember(dest => dest.OwnerUserName, opt => opt.MapFrom(src => src.ApplicationUser.UserName))
+                .ForMember(dest => dest.OwnerProfilePicture, opt => opt.MapFrom(src => src.ApplicationUser.ProfilePicture));
 
             // Comment mappings
             CreateMap<CommentCreateDto, Comment>()
