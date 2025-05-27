@@ -13,7 +13,9 @@ namespace Roomify.GP.Core.Services.Contract
 
         Task<UserWithRolesDto> GetUserByIdAsync(Guid id);
 
-        Task<ApplicationUser> UpdateUserAsync(Guid id, UserUpdateDto dto);
+        Task<string?> UpdateUserAsync(Guid id, UserUpdateDto dto);
+
+
         Task<bool> DeleteUserAsync(Guid id);
 
     }

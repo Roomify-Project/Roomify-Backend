@@ -12,5 +12,7 @@ namespace Roomify.GP.Core.DTOs.ChatModel
         public Guid SenderId { get; set; }
         public string Content { get; set; }
         public DateTime SentAt { get; set; }
+        public string? AttachmentUrl { get; set; }
+
     }
 }

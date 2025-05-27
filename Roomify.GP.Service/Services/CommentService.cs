@@ -20,19 +20,22 @@ namespace Roomify.GP.Service.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<CommentService> _logger;
+        private readonly INotificationService _notificationService;
 
         public CommentService(
             ICommentRepository commentRepository,
             IPortfolioPostRepository postRepository,
             UserManager<ApplicationUser> userManager,
             IMapper mapper,
-            ILogger<CommentService> logger)
+            ILogger<CommentService> logger,
+            INotificationService notificationService)
         {
             _commentRepository = commentRepository;
             _postRepository = postRepository;
             _userManager = userManager;
             _mapper = mapper;
             _logger = logger;
+            _notificationService = notificationService;
         }
 
         public async Task<IEnumerable<CommentResponseDto>> GetAllByPostIdAsync(Guid postId)
@@ -79,9 +82,20 @@ namespace Roomify.GP.Service.Services
                 await _commentRepository.AddAsync(comment);
                 _logger.LogInformation("Comment {CommentId} successfully added", comment.Id);
 
-                // Ensure we have navigation properties for response
+                // Ensure navigation properties for response
                 comment.ApplicationUser = user;
                 comment.PortfolioPost = post;
+
+                // --- إضافة Notification هنا ---
+                if (post.ApplicationUserId != userId)  // ما تبعتش إشعار لنفس الشخص
+                {
+                    await _notificationService.CreateNotificationAsync(
+                        recipientUserId: post.ApplicationUserId,
+                        type: "Comment",
+                        message: $"{user.UserName} commented on your post.",
+                        relatedEntityId: comment.Id
+                    );
+                }
 
                 return MapToResponseDto(comment);
             }

@@ -30,6 +30,7 @@ namespace Roomify.GP.Repository.Data.Contexts
         public DbSet<UserFollow> UserFollows { get; set; }
         public DbSet<PendingRegistration> PendingRegistrations { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
