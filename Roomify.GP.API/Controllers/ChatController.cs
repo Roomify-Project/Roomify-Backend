@@ -28,37 +28,47 @@ namespace Roomify.GP.API.Controllers
             _userConnectionService = userConnectionService;
         }
 
-       [HttpPost("sendMessage")]
-[RequestSizeLimit(10 * 1024 * 1024)]
-public async Task<IActionResult> SendMessage([FromForm] ChatModel chatModel)
-{
-    var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-    if (currentUserId != chatModel.SenderId.ToString())
-        return Unauthorized("You are not authorized to send this message.");
-
-    if (chatModel.SenderId == Guid.Empty || chatModel.ReceiverId == Guid.Empty)
-        return BadRequest("SenderId and ReceiverId must be valid.");
-
-    // Save message and get full info back including ID and AttachmentUrl
-    var savedMessage = await _messageService.SaveMessageAndReturnAsync(chatModel); // Ensure this method exists
-
-    // Send message to receiver over SignalR
-    await _hubContext.Clients.User(chatModel.ReceiverId.ToString())
-        .SendAsync("ReceiveMessage", new
+        [HttpPost("sendMessage")]
+        [RequestSizeLimit(10 * 1024 * 1024)]
+        public async Task<IActionResult> SendMessage([FromForm] ChatMessageWithFileDto chatModel)
         {
-            messageId = savedMessage.MessageId,
-            content = savedMessage.Content,
-            attachmentUrl = savedMessage.AttachmentUrl,
-            senderId = savedMessage.SenderId,
-            sentAt = savedMessage.SentAt
-        });
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (currentUserId != chatModel.SenderId.ToString())
+                return Unauthorized("You are not authorized to send this message.");
 
-    return Ok(new
-    {
-        message = "Message sent successfully.",
-        data = savedMessage
-    });
-}
+            if (chatModel.SenderId == Guid.Empty || chatModel.ReceiverId == Guid.Empty)
+                return BadRequest("SenderId and ReceiverId must be valid.");
+
+            if (string.IsNullOrWhiteSpace(chatModel.Message) && chatModel.File == null)
+                return BadRequest("You must provide either a message or a file.");
+
+            // Manual mapping to domain model
+            var model = new ChatModel
+            {
+                SenderId = chatModel.SenderId,
+                ReceiverId = chatModel.ReceiverId,
+                Message = chatModel.Message,
+                File = chatModel.File
+            };
+
+            var savedMessage = await _messageService.SaveMessageAndReturnAsync(model);
+
+            await _hubContext.Clients.User(chatModel.ReceiverId.ToString())
+                .SendAsync("ReceiveMessage", new
+                {
+                    messageId = savedMessage.MessageId,
+                    content = savedMessage.Content,
+                    attachmentUrl = savedMessage.AttachmentUrl,
+                    senderId = savedMessage.SenderId,
+                    sentAt = savedMessage.SentAt
+                });
+
+            return Ok(new
+            {
+                message = "Message sent successfully.",
+                data = savedMessage
+            });
+        }
 
         [HttpGet("getMessages/{userId}")]
         public async Task<IActionResult> GetMessages(Guid userId)
@@ -90,6 +100,20 @@ public async Task<IActionResult> SendMessage([FromForm] ChatModel chatModel)
                 return NotFound("Message not found or you're not the sender.");
 
             return Ok("Message deleted successfully.");
+        }
+
+        [HttpGet("GetAllChats", Name = "GetAllChats")]
+        [ProducesResponseType(typeof(List<ChatPreviewDto>), 200)]
+        [Produces("application/json")]
+        public async Task<IActionResult> GetAllChats()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var chats = await _messageService.GetAllChatsAsync(userId);
+            return Ok(chats);
         }
     }
 }
