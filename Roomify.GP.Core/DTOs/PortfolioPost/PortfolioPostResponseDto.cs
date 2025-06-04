@@ -13,5 +13,8 @@ namespace Roomify.GP.Core.DTOs.PortfolioPost
         public string Description { get; set; }
         public DateTime CreatedAt { get; set; }
         public Guid ApplicationUserId { get; set; }
+        public string OwnerUserName { get; set; }
+        public string OwnerProfilePicture { get; set; }
     }
 }
+    
