@@ -9,9 +9,9 @@ using Newtonsoft.Json;
 
 namespace Roomify.GP.API.Controllers
 {
+    [Authorize(Roles = "User,InteriorDesigner")]
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
     public class RoomImageController : ControllerBase
     {
         private readonly IRoomImageService _roomImageService;

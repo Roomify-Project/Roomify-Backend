@@ -233,7 +233,7 @@ using (var scope = app.Services.CreateScope())
         await context.Database.MigrateAsync();
 
         // ✅ نضيف هنا كل الرولز اللي محتاجينها
-        string[] roles = { "NormalUser", "InteriorDesigner" };
+        string[] roles = { "User", "InteriorDesigner" };
 
         foreach (var role in roles)
         {

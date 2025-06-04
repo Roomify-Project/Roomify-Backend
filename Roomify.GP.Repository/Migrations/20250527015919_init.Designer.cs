@@ -12,8 +12,8 @@ using Roomify.GP.Repository.Data.Contexts;
 namespace Roomify.GP.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250527004532_historyFKfix")]
-    partial class historyFKfix
+    [Migration("20250527015919_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -31,9 +31,15 @@ namespace Roomify.GP.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AttachmentUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("ReceiverId")
                         .HasColumnType("uniqueidentifier");
