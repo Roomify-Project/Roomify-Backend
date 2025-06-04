@@ -33,5 +33,14 @@ namespace Roomify.GP.Core.Service.Contract
 
         // Get user's saved designs
         Task<List<SavedDesign>> GetUserSavedDesignsAsync(Guid userId);
+
+        // Get User saved designs with info 
+        Task<List<SavedDesign>> GetUserSavedDesignsWithUserInfoAsync(Guid userId);
+
+        // Gets all saved designs with user info
+        Task<List<SavedDesign>> GetAllSavedDesignsWithUserInfoAsync();
+
+        // Gets a specific saved design by ID with user info
+        Task<SavedDesign> GetSavedDesignByIdWithUserInfoAsync(Guid id);
     }
 }

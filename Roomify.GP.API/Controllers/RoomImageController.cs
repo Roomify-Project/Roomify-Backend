@@ -9,9 +9,9 @@ using Roomify.GP.Core.DTOs.GenerateDesign;
 
 namespace Roomify.GP.API.Controllers
 {
+    [Authorize(Roles = "User,InteriorDesigner")]
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
     public class RoomImageController : ControllerBase
     {
         private readonly IRoomImageService _roomImageService;

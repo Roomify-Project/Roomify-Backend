@@ -49,7 +49,7 @@ namespace Roomify.GP.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Messages");
+                    b.ToTable("Messages", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -199,7 +199,7 @@ namespace Roomify.GP.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AIResults");
+                    b.ToTable("AIResults", (string)null);
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.AI.AIResultHistory", b =>
@@ -225,7 +225,7 @@ namespace Roomify.GP.Repository.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("AIResultHistories");
+                    b.ToTable("AIResultHistories", (string)null);
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.AI.RoomImage.Prompt", b =>
@@ -260,7 +260,7 @@ namespace Roomify.GP.Repository.Migrations
                         .IsUnique()
                         .HasFilter("[RoomImageId] IS NOT NULL");
 
-                    b.ToTable("Prompts");
+                    b.ToTable("Prompts", (string)null);
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.AI.RoomImage.RoomImage", b =>
@@ -283,7 +283,7 @@ namespace Roomify.GP.Repository.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("RoomImages");
+                    b.ToTable("RoomImages", (string)null);
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.AI.SavedDesign", b =>
@@ -306,7 +306,7 @@ namespace Roomify.GP.Repository.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("SavedDesigns");
+                    b.ToTable("SavedDesigns", (string)null);
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.Comment", b =>
@@ -340,7 +340,7 @@ namespace Roomify.GP.Repository.Migrations
 
                     b.HasIndex("PortfolioPostId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comments", (string)null);
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.Identity.ApplicationUser", b =>
@@ -460,7 +460,7 @@ namespace Roomify.GP.Repository.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("EmailConfirmationTokens");
+                    b.ToTable("EmailConfirmationTokens", (string)null);
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.Identity.PendingRegistration", b =>
@@ -501,7 +501,7 @@ namespace Roomify.GP.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PendingRegistrations");
+                    b.ToTable("PendingRegistrations", (string)null);
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.Identity.UserConnection", b =>
@@ -522,7 +522,7 @@ namespace Roomify.GP.Repository.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserConnections");
+                    b.ToTable("UserConnections", (string)null);
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.Notification", b =>
@@ -583,7 +583,7 @@ namespace Roomify.GP.Repository.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("OtpCodes");
+                    b.ToTable("OtpCodes", (string)null);
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.PortfolioPost", b =>
@@ -616,7 +616,7 @@ namespace Roomify.GP.Repository.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("PortfolioPosts");
+                    b.ToTable("PortfolioPosts", (string)null);
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.UserFollow", b =>
@@ -634,7 +634,7 @@ namespace Roomify.GP.Repository.Migrations
 
                     b.HasIndex("FollowingId");
 
-                    b.ToTable("UserFollows");
+                    b.ToTable("UserFollows", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>

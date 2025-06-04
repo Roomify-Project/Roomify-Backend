@@ -20,12 +20,13 @@ using System.Text.Json.Serialization;
 using CloudinaryDotNet;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authorization;
-using Roomify.GP.Core.Background_Services;
-using Roomify.GP.API.Filters;
 using Roomify.GP.API.Middlewares.Errors;
 using Microsoft.AspNetCore.Mvc;
 using Roomify.GP.API.Services;
 using Roomify.GP.API.Helpers;
+using Roomify.GP.Core.Background_Services;
+using Roomify.GP.API.Filters;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -216,7 +217,10 @@ using (var scope = app.Services.CreateScope())
     try
     {
         await context.Database.MigrateAsync();
-        string[] roles = { "NormalUser", "InteriorDesigner" };
+
+        // ✅ نضيف هنا كل الرولز اللي محتاجينها
+        string[] roles = { "User", "InteriorDesigner" };
+
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
