@@ -25,25 +25,21 @@ using Roomify.GP.API.Filters;
 using Roomify.GP.API.Middlewares.Errors;
 using Microsoft.AspNetCore.Mvc;
 using Roomify.GP.API.Services;
-
+using Roomify.GP.API.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add controllers
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-// Register DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// AutoMapper
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 
-// Repositories & Services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
@@ -62,31 +58,22 @@ builder.Services.AddScoped<MessageService>();
 builder.Services.AddScoped<IPendingRegistrationRepository, PendingRegistrationRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ICommentService, CommentService>();
-
 builder.Services.AddScoped<INotificationBroadcaster, NotificationBroadcaster>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-// AI DI:
 builder.Services.AddScoped<IRoomImageRepository, RoomImageRepository>();
 builder.Services.AddScoped<IRoomImageService, RoomImageService>();
 builder.Services.AddScoped<IPromptRepository, PromptRepository>();
 builder.Services.AddScoped<IAIResultHistoryRepository, AIResultHistoryRepository>();
 builder.Services.AddScoped<ISavedDesignRepository, SavedDesignRepository>();
-builder.Services.AddHostedService<CleanupService>();  // Background service to clean up expired designs
-
-// Register CleanupService singleton for background cleanup
+builder.Services.AddHostedService<CleanupService>();
 builder.Services.AddSingleton<CleanupService>();
 
-
-builder.Services.AddAuthorization(); // لازم جداً
-
-// Identity
 builder.Services.AddIdentityCore<ApplicationUser>(options => { })
     .AddRoles<IdentityRole<Guid>>()
     .AddEntityFrameworkStores<AppDbContext>();
 
-// منع Redirect على /Account/Login
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Events.OnRedirectToLogin = context =>
@@ -111,7 +98,6 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
     };
 });
 
-// JWT Settings
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
@@ -150,7 +136,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Cloudinary settings
 builder.Services.AddSingleton(serviceProvider =>
 {
     var config = serviceProvider.GetRequiredService<IConfiguration>();
@@ -163,26 +148,26 @@ builder.Services.AddSingleton(serviceProvider =>
     return new Cloudinary(account);
 });
 
-// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", builder =>
     {
-        builder
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .SetIsOriginAllowed(_ => true)
-            .AllowCredentials();
+        builder.AllowAnyHeader().AllowAnyMethod().SetIsOriginAllowed(_ => true).AllowCredentials();
     });
 });
 
-// SignalR
 builder.Services.AddSignalR();
 
-// Swagger + JWT Auth
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Roomify API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Roomify API",
+        Version = "1.0.0",
+        Description = "Roomify API for AI-powered room design",
+        Contact = new OpenApiContact { Name = "Support", Email = "support@roomify.com" },
+        License = new OpenApiLicense { Name = "Roomify License", Url = new Uri("https://roomify.com/license") }
+    });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -194,11 +179,7 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Enter your JWT token in the format: Bearer {your token}"
     });
 
-    // Add this section to handle file uploads
-    c.OperationFilter<FileUploadOperationFilter>();
-
-    // Add support for file uploads
-    c.OperationFilter<SwaggerFileOperationFilter>();
+    c.OperationFilter<SwaggerFileUploadFilter>();
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -218,13 +199,13 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Roomify API v1");
+    c.RoutePrefix = "swagger";
+});
 
-// Apply migrations and create roles
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -235,16 +216,11 @@ using (var scope = app.Services.CreateScope())
     try
     {
         await context.Database.MigrateAsync();
-
-        // ✅ نضيف هنا كل الرولز اللي محتاجينها
         string[] roles = { "NormalUser", "InteriorDesigner" };
-
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
-            {
                 await roleManager.CreateAsync(new IdentityRole<Guid>(role));
-            }
         }
     }
     catch (Exception ex)
@@ -254,9 +230,8 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Middleware
 app.UseCors("CorsPolicy");
-app.UseMiddleware<ExceptionMiddleware>(); // واحدة بس
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 

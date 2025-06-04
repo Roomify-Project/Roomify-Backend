@@ -9,6 +9,8 @@ namespace Roomify.GP.Core.Service.Contract
         Task<bool> DeleteMessageAsync(Guid messageId, Guid currentUserId); // ✅ إضافة الميثود
         Task<string?> SaveMessageAsync(ChatModel chatModel);
         Task<MessageResponseDto> SaveMessageAndReturnAsync(ChatModel chatModel);
+        Task<List<ChatPreviewDto>> GetAllChatsAsync(string userId);
+
 
     }
 }

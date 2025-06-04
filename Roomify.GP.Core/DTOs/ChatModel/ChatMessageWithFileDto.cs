@@ -11,7 +11,7 @@ namespace Roomify.GP.Core.DTOs.ChatModel
     {
         public Guid SenderId { get; set; }
         public Guid ReceiverId { get; set; }
-        public string Message { get; set; }
+        public string? Message { get; set; }
         public IFormFile? File { get; set; }  // الصورة أو الملف
     }
 
