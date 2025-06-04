@@ -100,6 +100,43 @@ public class MessageService : IMessageService
             SentAt = newMessage.SentAt,
             AttachmentUrl = newMessage.AttachmentUrl
         };
+
+
+
     }
+
+    public async Task<List<ChatPreviewDto>> GetAllChatsAsync(string userId)
+    {
+        Guid userGuid = Guid.Parse(userId);
+
+        var chats = await _context.Messages
+            .Where(m => m.SenderId == userGuid || m.ReceiverId == userGuid)
+            .GroupBy(m => m.SenderId == userGuid ? m.ReceiverId : m.SenderId)
+            .Select(g => new
+            {
+                ChatWithUserId = g.Key,
+                LastMessage = g.OrderByDescending(m => m.SentAt).FirstOrDefault()
+            })
+            .ToListAsync();
+
+        var userIds = chats.Select(c => c.ChatWithUserId).Distinct().ToList();
+
+        var users = await _context.Users
+            .Where(u => userIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id);
+
+        var result = chats.Select(c => new ChatPreviewDto
+        {
+            ChatWithUserId = c.ChatWithUserId.ToString(),
+            ChatWithName = users[c.ChatWithUserId].FullName,
+            ChatWithImageUrl = users[c.ChatWithUserId].ProfilePicture,
+            LastMessageContent = c.LastMessage.Content,
+            LastMessageTime = c.LastMessage.SentAt
+        }).ToList();
+
+        return result;
+    }
+
+
 
 }
