@@ -56,5 +56,15 @@ namespace Roomify.GP.Repository.Repositories
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
+        public async Task<List<ApplicationUser>> SearchUsersAsync(string query)
+        {
+            return await _context.Users
+                .Where(u =>
+                    u.UserName.Contains(query) ||
+                    u.FullName.Contains(query))
+                .ToListAsync();
+        }
+
+
     }
 }

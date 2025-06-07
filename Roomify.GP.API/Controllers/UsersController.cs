@@ -68,6 +68,17 @@ namespace Roomify.GP.API.Controllers
 
             var result = await _userService.DeleteUserAsync(id);
             return result ? Ok("User deleted successfully") : NotFound();
+            
         }
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchUsers([FromQuery] string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return BadRequest("Search query is required.");
+
+            var results = await _userService.SearchUsersAsync(query);
+            return Ok(results);
+        }
+
     }
 }

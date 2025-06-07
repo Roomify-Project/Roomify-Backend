@@ -15,6 +15,8 @@ namespace Roomify.GP.Core.Repositories.Contract
         Task DeleteUserAsync(Guid id);
         Task<bool> UserExistsAsync(Guid? id);
         Task<ApplicationUser> GetUserByEmailAsync(string email);
-   
+        Task<List<ApplicationUser>> SearchUsersAsync(string query);
+
+
     }
 }
