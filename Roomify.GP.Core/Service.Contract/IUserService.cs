@@ -1,4 +1,5 @@
 ﻿using Roomify.GP.Core.DTOs.ApplicationUser;
+using Roomify.GP.Core.DTOs.Search;
 using Roomify.GP.Core.DTOs.User;
 using Roomify.GP.Core.Entities.Identity;
 using System;
@@ -17,6 +18,8 @@ namespace Roomify.GP.Core.Services.Contract
 
 
         Task<bool> DeleteUserAsync(Guid id);
+        Task<List<UserSearchDto>> SearchUsersAsync(string query);
+
 
     }
 }

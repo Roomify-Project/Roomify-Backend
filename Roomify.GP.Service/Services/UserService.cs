@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Roomify.GP.Core.DTOs.Search;
 
 namespace Roomify.GP.Service
 {
@@ -90,5 +91,20 @@ namespace Roomify.GP.Service
             await _userRepository.DeleteUserAsync(id);
             return true;
         }
+
+        public async Task<List<UserSearchDto>> SearchUsersAsync(string query)
+        {
+            var users = await _userRepository.SearchUsersAsync(query);
+
+            return users.Select(u => new UserSearchDto
+            {
+                Id = u.Id,
+                UserName = u.UserName,
+                FullName = u.FullName,
+                ProfilePicture = u.ProfilePicture,
+                Email = u.Email
+            }).ToList();
+        }
+
     }
 }
