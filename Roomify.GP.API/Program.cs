@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Roomify.GP.API.Hubs;
 using Roomify.GP.Core.Entities.Identity;
 using Roomify.GP.Core.Repositories.Contract;
 using Roomify.GP.Core.Service.Contract;
@@ -16,24 +15,20 @@ using Roomify.GP.Service.Mappings;
 using Roomify.GP.Service.Services;
 using System.Security.Claims;
 using System.Text;
-using System.Text.Json.Serialization;
 using CloudinaryDotNet;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authorization;
-using Roomify.GP.Core.Background_Services;
-using Roomify.GP.API.Filters;
 using Roomify.GP.API.Middlewares.Errors;
 using Microsoft.AspNetCore.Mvc;
 using Roomify.GP.API.Services;
 using Roomify.GP.API.Helpers;
+using Roomify.GP.Core.Background_Services;
+using Roomify.GP.API.Hubs;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
+builder.Services.AddControllers();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -61,7 +56,7 @@ builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<INotificationBroadcaster, NotificationBroadcaster>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
+// AI DIs
 builder.Services.AddScoped<IRoomImageRepository, RoomImageRepository>();
 builder.Services.AddScoped<IRoomImageService, RoomImageService>();
 builder.Services.AddScoped<IPromptRepository, PromptRepository>();
@@ -197,6 +192,8 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+
+
 var app = builder.Build();
 
 app.UseSwagger();
@@ -216,11 +213,14 @@ using (var scope = app.Services.CreateScope())
     try
     {
         await context.Database.MigrateAsync();
-        string[] roles = { "NormalUser", "InteriorDesigner" };
-        foreach (var role in roles)
+
+        // ✅ نضيف هنا كل الرولز اللي محتاجينها
+        string[] roles = { Roles.User, Roles.InteriorDesigner };
+
+        foreach (var roleName in roles)
         {
-            if (!await roleManager.RoleExistsAsync(role))
-                await roleManager.CreateAsync(new IdentityRole<Guid>(role));
+            if (!await roleManager.RoleExistsAsync(roleName))
+                await roleManager.CreateAsync(new IdentityRole<Guid>(roleName));
         }
     }
     catch (Exception ex)
@@ -238,9 +238,9 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.MapHub<PrivateChatHub>("/chat")
-    .RequireAuthorization(new AuthorizeAttribute { Roles = "NormalUser,InteriorDesigner" });
+    .RequireAuthorization(new AuthorizeAttribute { Roles = $"{Roles.User},{Roles.InteriorDesigner}" });
 
 app.MapHub<NotificationHub>("/notificationHub")
-    .RequireAuthorization(new AuthorizeAttribute { Roles = "NormalUser,InteriorDesigner" });
+    .RequireAuthorization(new AuthorizeAttribute { Roles = $"{Roles.User},{Roles.InteriorDesigner}" });
 
 app.Run();

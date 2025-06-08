@@ -18,18 +18,33 @@ namespace Roomify.GP.Repository.Repositories
         {
             _context = context;
         }
-
+         
         public async Task AddAsync(SavedDesign entity)
         {
             await _context.SavedDesigns.AddAsync(entity);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<SavedDesign>> GetByUserIdAsync(Guid userId)
+        public async Task<List<SavedDesign>> GetByUserIdWithUserInfoAsync(Guid userId)
         {
             return await _context.SavedDesigns
+                .Include(s => s.ApplicationUser)
                 .Where(s => s.ApplicationUserId == userId)
                 .ToListAsync();
+        }
+
+        public async Task<List<SavedDesign>> GetAllWithUserInfoAsync()
+        {
+            return await _context.SavedDesigns
+                .Include(s => s.ApplicationUser)
+                .ToListAsync();
+        }
+
+        public async Task<SavedDesign> GetByIdWithUserInfoAsync(Guid id)
+        {
+            return await _context.SavedDesigns
+                .Include(s => s.ApplicationUser)
+                .FirstOrDefaultAsync(s => s.Id == id);
         }
     }
 }

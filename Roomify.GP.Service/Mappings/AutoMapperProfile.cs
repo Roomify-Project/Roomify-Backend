@@ -17,7 +17,7 @@ namespace Roomify.GP.Service.Mappings
             CreateMap<UserCreateDto, ApplicationUser>();
             CreateMap<UserUpdateDto, ApplicationUser>();
             CreateMap<ApplicationUser, UserWithRolesDto>()
-                .ForMember(dest => dest.Role, opt => opt.Ignore())
+                .ForMember(dest => dest.Roles, opt => opt.Ignore())
                 .ForMember(dest => dest.EmailConfirmed, opt => opt.MapFrom(src => src.EmailConfirmed));
 
             CreateMap<PortfolioPostDto, PortfolioPost>()

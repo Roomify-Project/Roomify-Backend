@@ -26,7 +26,7 @@ namespace Roomify.GP.Repository.Repositories
 
         public async Task<IEnumerable<PortfolioPost>> GetByUserIdAsync(Guid userId)
         {
-            return await _context.PortfolioPosts.Where(P => P.ApplicationUserId.ToString() == userId.ToString()).ToListAsync();
+            return await _context.PortfolioPosts.Include(P => P.ApplicationUser).Where(P => P.ApplicationUserId.ToString() == userId.ToString()).ToListAsync();
 
         }
 
