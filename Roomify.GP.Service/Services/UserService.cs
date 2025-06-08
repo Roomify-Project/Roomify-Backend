@@ -41,7 +41,7 @@ namespace Roomify.GP.Service
             {
                 var userDto = _mapper.Map<UserWithRolesDto>(user);
                 var roles = await _userManager.GetRolesAsync(user);
-                userDto.Role = roles.FirstOrDefault() ?? "NormalUser";
+                userDto.Roles = roles.FirstOrDefault() ?? "NormalUser";
                 usersWithRoles.Add(userDto);
             }
 
@@ -56,7 +56,7 @@ namespace Roomify.GP.Service
 
             var userDto = _mapper.Map<UserWithRolesDto>(user);
             var roles = await _userManager.GetRolesAsync(user);
-            userDto.Role = roles.FirstOrDefault() ?? "NormalUser";
+            userDto.Roles = roles.FirstOrDefault() ?? "NormalUser";
 
             return userDto;
         }

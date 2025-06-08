@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Roomify.GP.Core.Entities.Identity
 {
-    public enum Roles
+    public static class Roles
     {
-        [EnumMember(Value = "User")]
-        User,
-
-        [EnumMember(Value = "InteriorDesigner")]
-        InteriorDesigner
+        public const string User = "User";
+        public const string InteriorDesigner = "InteriorDesigner";
     }
 }

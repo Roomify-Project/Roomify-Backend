@@ -146,12 +146,6 @@ namespace Roomify.GP.Service.Services
             return await _aiResultHistoryRepository.GetByUserIdAsync(userId);
         }
 
-        // Get user's saved designs
-        public async Task<List<SavedDesign>> GetUserSavedDesignsAsync(Guid userId)
-        {
-            return await _savedDesignRepository.GetByUserIdAsync(userId);
-        }
-
         //Get user's saved designs with user information
         public async Task<List<SavedDesign>> GetUserSavedDesignsWithUserInfoAsync(Guid userId)
         {

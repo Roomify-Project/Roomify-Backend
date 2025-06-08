@@ -10,7 +10,7 @@ namespace Roomify.GP.Core.Repositories.Contract
     public interface ISavedDesignRepository
     {
         Task AddAsync(SavedDesign entity);
-        Task<List<SavedDesign>> GetByUserIdAsync(Guid userId);
+        //Task<List<SavedDesign>> GetByUserIdAsync(Guid userId);
         Task<SavedDesign> GetByIdWithUserInfoAsync(Guid id);
         Task<List<SavedDesign>> GetAllWithUserInfoAsync();
         Task<List<SavedDesign>> GetByUserIdWithUserInfoAsync(Guid userId);

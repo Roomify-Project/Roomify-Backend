@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace Roomify.GP.API.Controllers
 {
-    [Authorize(Roles = "User,InteriorDesigner")]
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class ChatController : ControllerBase

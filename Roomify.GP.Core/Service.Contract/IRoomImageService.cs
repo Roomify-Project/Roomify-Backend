@@ -31,9 +31,6 @@ namespace Roomify.GP.Core.Service.Contract
         // Get user's history of generated designs
         Task<List<AIResultHistory>> GetUserHistoryAsync(Guid userId);
 
-        // Get user's saved designs
-        Task<List<SavedDesign>> GetUserSavedDesignsAsync(Guid userId);
-
         // Get User saved designs with info 
         Task<List<SavedDesign>> GetUserSavedDesignsWithUserInfoAsync(Guid userId);
 

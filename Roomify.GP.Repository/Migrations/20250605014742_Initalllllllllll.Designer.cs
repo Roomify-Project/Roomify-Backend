@@ -12,8 +12,8 @@ using Roomify.GP.Repository.Data.Contexts;
 namespace Roomify.GP.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250527122349_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250605014742_Initalllllllllll")]
+    partial class Initalllllllllll
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Roomify.GP.API.Controllers
 {
-    [Authorize(Roles = "User,InteriorDesigner")]
+    //[Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class CommentsController : ControllerBase

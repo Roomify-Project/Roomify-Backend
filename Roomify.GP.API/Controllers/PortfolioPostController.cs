@@ -12,7 +12,7 @@ using Roomify.GP.Core.Service.Contract;
 
 namespace Roomify.GP.API.Controllers
 {
-    [Authorize(Roles = "InteriorDesigner")]
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class PortfolioPostController : ControllerBase
@@ -124,7 +124,7 @@ namespace Roomify.GP.API.Controllers
 
         [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
         [HttpPost("upload/{userId}")]
-        //[Authorize(Roles = "InteriorDesigner,Admin")]  // allowed roles
+        //[Authorize(Roles = Roles.InteriorDesigner)]
         public async Task<IActionResult> Upload(Guid userId, [FromForm] PortfolioPostDto portfolioPostDto)
         {
             if (userId == Guid.Empty)
@@ -178,6 +178,7 @@ namespace Roomify.GP.API.Controllers
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         [HttpDelete("{id}")]
+        //[Authorize(Roles = Roles.InteriorDesigner)]
         public async Task<IActionResult> Delete(Guid id)
         {
             if (id == Guid.Empty)
