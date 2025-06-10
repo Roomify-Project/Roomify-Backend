@@ -21,18 +21,30 @@ namespace Roomify.GP.Repository.Repositories
 
         public async Task<IEnumerable<PortfolioPost>> GetAllAsync()
         {
-            return await _context.PortfolioPosts.Include( P => P.ApplicationUser).ToListAsync();
-        }
-
-        public async Task<IEnumerable<PortfolioPost>> GetByUserIdAsync(Guid userId)
-        {
-            return await _context.PortfolioPosts.Include(P => P.ApplicationUser).Where(P => P.ApplicationUserId.ToString() == userId.ToString()).ToListAsync();
-
+            return await _context.PortfolioPosts
+            .Include(p => p.ApplicationUser)
+            .Include(p => p.Comments)
+            .Include(p => p.Likes)
+            .ToListAsync();
         }
 
         public async Task<PortfolioPost> GetByIdAsync(Guid id)
         {
-            return await _context.PortfolioPosts.Include(P => P.ApplicationUser).FirstOrDefaultAsync(P => P.Id == id);
+            return await _context.PortfolioPosts
+            .Include(p => p.ApplicationUser)
+            .Include(p => p.Comments)
+            .Include(p => p.Likes)
+            .FirstOrDefaultAsync(p => p.Id == id);
+        }
+
+        public async Task<IEnumerable<PortfolioPost>> GetByUserIdAsync(Guid userId)
+        {
+            return await _context.PortfolioPosts
+            .Where(p => p.ApplicationUserId == userId)
+            .Include(p => p.Comments)
+            .Include(p => p.Likes)
+            .ToListAsync();
+
         }
 
         public async Task AddAsync(Guid userId, PortfolioPost post)
@@ -50,5 +62,36 @@ namespace Roomify.GP.Repository.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        
+        public async Task<IEnumerable<Comment>> GetAllCommentsAsync(Guid postId) => await GetAllByPostIdAsync(postId);
+        private async Task<IEnumerable<Comment>> GetAllByPostIdAsync(Guid postId)
+        {
+            return await _context.Comments
+                .Where(c => c.PortfolioPostId == postId && !c.IsDeleted)
+                .Include(c => c.ApplicationUser)
+                .ToListAsync();
+        }
+
+
+        public async Task<bool> LikeExistsAsync(Guid postId, Guid userId)
+        {
+            return await _context.Likes.AnyAsync(l => l.PortfolioPostId == postId && l.ApplicationUserId == userId);
+        }
+
+        public async Task AddLikeAsync(Like like)
+        {
+            await _context.Likes.AddAsync(like);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveLikeAsync(Guid postId, Guid userId)
+        {
+            var like = await _context.Likes.FirstOrDefaultAsync(l => l.PortfolioPostId == postId && l.ApplicationUserId == userId);
+            if (like != null) { _context.Likes.Remove(like); await _context.SaveChangesAsync(); }
+        }
+
+        public async Task<int> GetLikesCountAsync(Guid postId) => await _context.Likes.CountAsync(l => l.PortfolioPostId == postId);
     }
 }
+

@@ -14,5 +14,14 @@ namespace Roomify.GP.Core.Repositories.Contract
         Task<PortfolioPost> GetByIdAsync(Guid id);
         Task AddAsync(Guid userId, PortfolioPost post);
         Task DeleteAsync(Guid id);
+
+        // Comments
+        Task<IEnumerable<Comment>> GetAllCommentsAsync(Guid postId);
+
+        // Likes
+        Task<bool> LikeExistsAsync(Guid postId, Guid userId);
+        Task AddLikeAsync(Like like);
+        Task RemoveLikeAsync(Guid postId, Guid userId);
+        Task<int> GetLikesCountAsync(Guid postId);
     }
 }

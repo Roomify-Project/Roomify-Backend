@@ -9,6 +9,7 @@ using Roomify.GP.Core.DTOs.PortfolioPost;
 using Roomify.GP.Core.Entities;
 using Roomify.GP.Core.Entities.Identity;
 using Roomify.GP.Core.Service.Contract;
+using Roomify.GP.Service.Services;
 
 namespace Roomify.GP.API.Controllers
 {
@@ -17,16 +18,16 @@ namespace Roomify.GP.API.Controllers
     [ApiController]
     public class PortfolioPostController : ControllerBase
     {
-        private readonly IPortfolioPostService _service;
+        private readonly IPortfolioPostService _portfolioPostService;
         private readonly ICloudinaryService _cloudinaryService;
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<PortfolioPostController> _logger;
         private readonly IRoomImageService _roomImageService;
 
-        public PortfolioPostController(IPortfolioPostService service, ICloudinaryService cloudinaryService, IMapper mapper, UserManager<ApplicationUser> userManager, ILogger<PortfolioPostController> logger, IRoomImageService roomImageService)
+        public PortfolioPostController(IPortfolioPostService portfolioPostService, ICloudinaryService cloudinaryService, IMapper mapper, UserManager<ApplicationUser> userManager, ILogger<PortfolioPostController> logger, IRoomImageService roomImageService)
         {
-            _service = service;
+            _portfolioPostService = portfolioPostService;
             _cloudinaryService = cloudinaryService;
             _mapper = mapper;
             _userManager = userManager;
@@ -35,39 +36,39 @@ namespace Roomify.GP.API.Controllers
         }
 
         [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
-        [HttpGet]
+        [HttpGet]      // GET api/portfolio
         public async Task<IActionResult> GetAll()
         {
             try
             {
-                // Get all portfolio posts
-                var posts = await _service.GetAllAsync();
-                var portfolioResponse = _mapper.Map<List<PortfolioPostResponseDto>>(posts);
-
-                // Get all saved designs with user info
-                var savedDesigns = await _roomImageService.GetAllSavedDesignsWithUserInfoAsync();
-
-                // Create combined response
-                var combinedResponse = new
-                {
-                    PortfolioPosts = portfolioResponse,
-                    SavedDesigns = savedDesigns.Select(sd => new
-                    {
-                        Id = sd.Id,
-                        GeneratedImageUrl = sd.GeneratedImageUrl,
-                        SavedAt = sd.SavedAt,
-                        UserId = sd.ApplicationUserId,
-                        UserFullName = sd.ApplicationUser?.FullName,
-                        UserProfilePicture = sd.ApplicationUser?.ProfilePicture
-                    })
-                };
-
-                return Ok(combinedResponse);
+                var (posts, designs) = await _portfolioPostService.GetAllCombinedAsync();
+                return Ok(new { PortfolioPosts = posts, SavedDesigns = designs });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving all posts and saved designs");
-                return StatusCode(500, new ApiErrorResponse(500, "An error occurred while retrieving data"));
+                _logger.LogError(ex, "Error retrieving combined portfolio");
+                return StatusCode(500, new ApiErrorResponse(500, "Failed to retrieve data"));
+            }
+        }
+
+
+        [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
+        [HttpGet("{id}")]   // GET api/portfolio/{id}
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            try
+            {
+                var result = await _portfolioPostService.GetByIdCombinedAsync(id);
+                return Ok(new { Type = result.Type, Data = result.Data });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new ApiErrorResponse(404, "Item not found"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving item {Id}", id);
+                return StatusCode(500, new ApiErrorResponse(500, "Failed to retrieve item"));
             }
         }
 
@@ -76,55 +77,14 @@ namespace Roomify.GP.API.Controllers
         [HttpGet("by-user/{userId}")]
         public async Task<IActionResult> GetByUser(Guid userId)
         {
-            var posts = await _service.GetByUserIdAsync(userId);
+            var posts = await _portfolioPostService.GetByUserIdAsync(userId);
             var response = _mapper.Map<List<PortfolioPostResponseDto>>(posts);
             return Ok(response);
         }
 
 
         [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(Guid id)
-        {
-            try
-            {
-                // First try to get as a portfolio post
-                var post = await _service.GetByIdAsync(id);
-                if (post != null)
-                {
-                    var portfolioResponse = _mapper.Map<PortfolioPostResponseDto>(post);
-                    return Ok(new { Type = "PortfolioPost", Data = portfolioResponse });
-                }
-
-                // If not found as portfolio post, try to get as saved design
-                var savedDesign = await _roomImageService.GetSavedDesignByIdWithUserInfoAsync(id);
-                if (savedDesign != null)
-                {
-                    var savedDesignResponse = new
-                    {
-                        Id = savedDesign.Id,
-                        GeneratedImageUrl = savedDesign.GeneratedImageUrl,
-                        SavedAt = savedDesign.SavedAt,
-                        UserId = savedDesign.ApplicationUserId,
-                        UserFullName = savedDesign.ApplicationUser?.FullName,
-                        UserProfilePicture = savedDesign.ApplicationUser?.ProfilePicture
-                    };
-                    return Ok(new { Type = "SavedDesign", Data = savedDesignResponse });
-                }
-
-                return NotFound(new ApiErrorResponse(404, "Item not found"));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving item by ID: {Id}", id);
-                return StatusCode(500, new ApiErrorResponse(500, "An error occurred while retrieving the item"));
-            }
-        }
-
-
-        [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
-        [HttpPost("upload/{userId}")]
-        //[Authorize(Roles = Roles.InteriorDesigner)]
+        [HttpPost("upload/{userId}")]      // POST api/portfolio/upload/{userId}
         public async Task<IActionResult> Upload(Guid userId, [FromForm] PortfolioPostDto portfolioPostDto)
         {
             if (userId == Guid.Empty)
@@ -148,7 +108,7 @@ namespace Roomify.GP.API.Controllers
                 post.ApplicationUser = user;
                 post.ApplicationUserId = userId;
 
-                await _service.AddAsync(userId, post);
+                await _portfolioPostService.AddAsync(userId, post);
                 _logger.LogInformation("Post uploaded successfully for user {UserId}", userId);
 
                 return Ok(new
@@ -174,17 +134,17 @@ namespace Roomify.GP.API.Controllers
             }
         }
 
+
         [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-        [HttpDelete("{id}")]
-        //[Authorize(Roles = Roles.InteriorDesigner)]
+        [HttpDelete("{id}")]     // DELETE api/portfolio/{id}
         public async Task<IActionResult> Delete(Guid id)
         {
             if (id == Guid.Empty)
                 return BadRequest(new ApiErrorResponse(400));
 
-            var post = await _service.GetByIdAsync(id);
+            var post = await _portfolioPostService.GetByIdAsync(id);
             if (post == null)
                 return NotFound(new ApiErrorResponse(404));
 
@@ -198,9 +158,34 @@ namespace Roomify.GP.API.Controllers
                 return Ok(new { message = "Post deleted, but image deletion failed", details = ex.Message });
             }
 
-            await _service.DeleteAsync(id);
+            await _portfolioPostService.DeleteAsync(id);
 
             return Ok(new { message = "Post and image deleted successfully." });
+        }
+
+
+
+        // POST api/portfolio/{id}/likes?isPost=true&userId={userId}
+        [HttpPost("{id}/likes")]
+        public async Task<IActionResult> Like(Guid id, [FromQuery] bool isPost, [FromQuery] Guid userId)
+        {
+            try
+            {
+                var like = await _portfolioPostService.AddLikeAsync(id, isPost, userId);
+                return Ok(like);
+            }
+            catch (ApplicationException ex)
+            {
+                return BadRequest(new ApiErrorResponse(400, ex.Message));
+            }
+        }
+
+        // DELETE api/portfolio/{id}/likes?isPost=true&userId={userId}
+        [HttpDelete("{id}/likes")]
+        public async Task<IActionResult> Unlike(Guid id, [FromQuery] bool isPost, [FromQuery] Guid userId)
+        {
+            await _portfolioPostService.RemoveLikeAsync(id, isPost, userId);
+            return NoContent();
         }
     }
 }

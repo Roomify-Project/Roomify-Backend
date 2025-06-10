@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Roomify.GP.Repository.Migrations
 {
     /// <inheritdoc />
-    public partial class Initalllllllllll : Migration
+    public partial class AkhrInitailllisa : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -400,34 +400,6 @@ namespace Roomify.GP.Repository.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Comments",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    PortfolioPostId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ApplicationUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Comments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Comments_AspNetUsers_ApplicationUserId",
-                        column: x => x.ApplicationUserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Comments_PortfolioPosts_PortfolioPostId",
-                        column: x => x.PortfolioPostId,
-                        principalTable: "PortfolioPosts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Prompts",
                 columns: table => new
                 {
@@ -451,6 +423,73 @@ namespace Roomify.GP.Repository.Migrations
                         column: x => x.RoomImageId,
                         principalTable: "RoomImages",
                         principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Comments",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    PortfolioPostId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    SavedDesignId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    ApplicationUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Comments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Comments_AspNetUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Comments_PortfolioPosts_PortfolioPostId",
+                        column: x => x.PortfolioPostId,
+                        principalTable: "PortfolioPosts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Comments_SavedDesigns_SavedDesignId",
+                        column: x => x.SavedDesignId,
+                        principalTable: "SavedDesigns",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Likes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ApplicationUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PortfolioPostId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    SavedDesignId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Likes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Likes_AspNetUsers_ApplicationUserId",
+                        column: x => x.ApplicationUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Likes_PortfolioPosts_PortfolioPostId",
+                        column: x => x.PortfolioPostId,
+                        principalTable: "PortfolioPosts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Likes_SavedDesigns_SavedDesignId",
+                        column: x => x.SavedDesignId,
+                        principalTable: "SavedDesigns",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -508,6 +547,11 @@ namespace Roomify.GP.Repository.Migrations
                 column: "PortfolioPostId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Comments_SavedDesignId",
+                table: "Comments",
+                column: "SavedDesignId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_EmailConfirmationTokens_PendingRegistrationId",
                 table: "EmailConfirmationTokens",
                 column: "PendingRegistrationId");
@@ -516,6 +560,21 @@ namespace Roomify.GP.Repository.Migrations
                 name: "IX_EmailConfirmationTokens_UserId",
                 table: "EmailConfirmationTokens",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Likes_ApplicationUserId",
+                table: "Likes",
+                column: "ApplicationUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Likes_PortfolioPostId",
+                table: "Likes",
+                column: "PortfolioPostId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Likes_SavedDesignId",
+                table: "Likes",
+                column: "SavedDesignId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OtpCodes_UserId",
@@ -585,6 +644,9 @@ namespace Roomify.GP.Repository.Migrations
                 name: "EmailConfirmationTokens");
 
             migrationBuilder.DropTable(
+                name: "Likes");
+
+            migrationBuilder.DropTable(
                 name: "Messages");
 
             migrationBuilder.DropTable(
@@ -597,9 +659,6 @@ namespace Roomify.GP.Repository.Migrations
                 name: "Prompts");
 
             migrationBuilder.DropTable(
-                name: "SavedDesigns");
-
-            migrationBuilder.DropTable(
                 name: "UserConnections");
 
             migrationBuilder.DropTable(
@@ -609,10 +668,13 @@ namespace Roomify.GP.Repository.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
+                name: "PendingRegistrations");
+
+            migrationBuilder.DropTable(
                 name: "PortfolioPosts");
 
             migrationBuilder.DropTable(
-                name: "PendingRegistrations");
+                name: "SavedDesigns");
 
             migrationBuilder.DropTable(
                 name: "AIResultHistories");

@@ -16,9 +16,15 @@ namespace Roomify.GP.Core.Entities
         public DateTime UpdatedAt { get; set; }
         public bool IsDeleted { get; set; }
 
-
         // FK
         public Guid ApplicationUserId { get; set; }
         public required ApplicationUser ApplicationUser { get; set; }
+
+        // Comments on Portfolio Post
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+        // Likes on Portfolio Post
+        public ICollection<Like> Likes { get; set; } = new List<Like>();
+
     }
 }

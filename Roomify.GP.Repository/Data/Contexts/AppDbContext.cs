@@ -30,6 +30,7 @@ namespace Roomify.GP.Repository.Data.Contexts
         public DbSet<UserFollow> UserFollows { get; set; }
         public DbSet<PendingRegistration> PendingRegistrations { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<Like> Likes { get; set; }
         public DbSet<Notification> Notifications { get; set; }
 
 
@@ -57,15 +58,41 @@ namespace Roomify.GP.Repository.Data.Contexts
             #region CommentSetup
             builder.Entity<Comment>()
                 .HasOne(c => c.ApplicationUser)
-                .WithMany()
+                .WithMany()  // no navigation on ApplicationUser side
                 .HasForeignKey(c => c.ApplicationUserId)
-                .OnDelete(DeleteBehavior.NoAction); // Prevent cascade deletion with post
+                .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<Comment>()
                 .HasOne(c => c.PortfolioPost)
-                .WithMany()
+                .WithMany(pp => pp.Comments)
                 .HasForeignKey(c => c.PortfolioPostId)
-                .OnDelete(DeleteBehavior.Cascade); // Delete comments when post is deleted
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Comment>()
+                .HasOne(c => c.SavedDesign)
+                .WithMany(sd => sd.Comments)
+                .HasForeignKey(c => c.SavedDesignId)
+                .OnDelete(DeleteBehavior.Restrict);
+            #endregion
+
+            #region LikeSetup
+            builder.Entity<Like>()
+                .HasOne(l => l.ApplicationUser)
+                .WithMany()  // no navigation on ApplicationUser side
+                .HasForeignKey(l => l.ApplicationUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<Like>()
+                .HasOne(l => l.PortfolioPost)
+                .WithMany(pp => pp.Likes)
+                .HasForeignKey(l => l.PortfolioPostId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Like>()
+                .HasOne(l => l.SavedDesign)
+                .WithMany(sd => sd.Likes)
+                .HasForeignKey(l => l.SavedDesignId)
+                .OnDelete(DeleteBehavior.Restrict);
             #endregion
 
             #region Emailconfirmation
@@ -75,7 +102,6 @@ namespace Roomify.GP.Repository.Data.Contexts
                 .HasForeignKey(e => e.PendingRegistrationId)
                 .OnDelete(DeleteBehavior.Cascade);
             #endregion
-
 
         }
     }

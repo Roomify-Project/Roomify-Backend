@@ -17,6 +17,7 @@ namespace Roomify.GP.Service.Services
     {
         private readonly ICommentRepository _commentRepository;
         private readonly IPortfolioPostRepository _postRepository;
+        private readonly ISavedDesignRepository _savedDesignRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger<CommentService> _logger;
@@ -25,6 +26,7 @@ namespace Roomify.GP.Service.Services
         public CommentService(
             ICommentRepository commentRepository,
             IPortfolioPostRepository postRepository,
+            ISavedDesignRepository savedDesignRepository,
             UserManager<ApplicationUser> userManager,
             IMapper mapper,
             ILogger<CommentService> logger,
@@ -32,16 +34,22 @@ namespace Roomify.GP.Service.Services
         {
             _commentRepository = commentRepository;
             _postRepository = postRepository;
+            _savedDesignRepository = savedDesignRepository;
             _userManager = userManager;
             _mapper = mapper;
             _logger = logger;
             _notificationService = notificationService;
         }
 
-        public async Task<IEnumerable<CommentResponseDto>> GetAllByPostIdAsync(Guid postId)
+        public async Task<IEnumerable<CommentResponseDto>> GetAllAsync(Guid? postId, Guid? designId)
         {
-            var comments = await _commentRepository.GetAllByPostIdAsync(postId);
-            return comments.Select(MapToResponseDto);
+            if (postId.HasValue)
+                return (await _commentRepository.GetAllByPostIdAsync(postId.Value))
+                       .Select(c => _mapper.Map<CommentResponseDto>(c));
+            if (designId.HasValue)
+                return (await _commentRepository.GetAllBySavedDesignIdAsync(designId.Value))
+                       .Select(c => _mapper.Map<CommentResponseDto>(c));
+            throw new ArgumentException("postId or designId must be provided");
         }
 
         public async Task<CommentResponseDto> GetByIdAsync(Guid id)
@@ -54,50 +62,19 @@ namespace Roomify.GP.Service.Services
         {
             try
             {
-                _logger.LogInformation("Starting to add comment for user {UserId} on post {PostId}",
-                    userId, commentDto.PortfolioPostId);
-
-                var post = await _postRepository.GetByIdAsync(commentDto.PortfolioPostId);
-                if (post == null)
-                {
-                    _logger.LogWarning("Portfolio post {PostId} not found", commentDto.PortfolioPostId);
-                    throw new ApplicationException("Portfolio post not found.");
-                }
-
-                var user = await _userManager.FindByIdAsync(userId.ToString());
-                if (user == null)
-                {
-                    _logger.LogWarning("User {UserId} not found", userId);
-                    throw new ApplicationException("User not found.");
-                }
-
-                var comment = new Comment
-                {
-                    Content = commentDto.Content,
-                    PortfolioPostId = commentDto.PortfolioPostId,
-                    ApplicationUserId = userId,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                await _commentRepository.AddAsync(comment);
-                _logger.LogInformation("Comment {CommentId} successfully added", comment.Id);
-
-                // Ensure navigation properties for response
-                comment.ApplicationUser = user;
-                comment.PortfolioPost = post;
-
-                // --- إضافة Notification هنا ---
-                if (post.ApplicationUserId != userId)  // ما تبعتش إشعار لنفس الشخص
-                {
-                    await _notificationService.CreateNotificationAsync(
-                        recipientUserId: post.ApplicationUserId,
-                        type: "Comment",
-                        message: $"{user.UserName} commented on your post.",
-                        relatedEntityId: comment.Id
-                    );
-                }
-
-                return MapToResponseDto(comment);
+                if (!commentDto.PortfolioPostId.HasValue && !commentDto.SavedDesignId.HasValue)
+                    throw new ArgumentException("Provide postId or designId");
+                var entity = _mapper.Map<Comment>(commentDto);
+                // Validate existence (optional: notification logic)
+                if (commentDto.PortfolioPostId.HasValue)
+                    _ = await _postRepository.GetByIdAsync(commentDto.PortfolioPostId.Value)
+                        ?? throw new ApplicationException("Post not found");
+                else
+                    _ = await _savedDesignRepository.GetByIdWithUserInfoAsync(commentDto.SavedDesignId.Value)
+                        ?? throw new ApplicationException("Design not found");
+                await _commentRepository.AddAsync(entity);
+                var full = await _commentRepository.GetByIdAsync(entity.Id);
+                return _mapper.Map<CommentResponseDto>(full);
             }
             catch (ApplicationException ex)
             {
@@ -115,27 +92,21 @@ namespace Roomify.GP.Service.Services
         {
             try
             {
-                _logger.LogInformation("Attempting to update comment {CommentId} by user {UserId}", id, userId);
-
                 // Check if the user is the owner of the comment
-                if (!await _commentRepository.IsOwnerAsync(id, userId))
+                if (!await _commentRepository.IsAuthorizedUserAsync(id, userId))
                 {
-                    _logger.LogWarning("User {UserId} attempted to update comment {CommentId} but is not the owner",
-                        userId, id);
                     throw new UnauthorizedAccessException("You are not authorized to update this comment.");
                 }
 
                 var comment = await _commentRepository.GetByIdAsync(id);
                 if (comment == null)
                 {
-                    _logger.LogWarning("Comment {CommentId} not found for update", id);
                     throw new ApplicationException("Comment not found.");
                 }
 
                 comment.Content = commentDto.Content;
                 comment.UpdatedAt = DateTime.UtcNow;
                 await _commentRepository.UpdateAsync(comment);
-                _logger.LogInformation("Comment {CommentId} successfully updated by user {UserId}", id, userId);
 
                 // Get full user details if needed for response
                 var user = await _userManager.FindByIdAsync(userId.ToString());
@@ -167,25 +138,17 @@ namespace Roomify.GP.Service.Services
         {
             try
             {
-                _logger.LogInformation("Attempting to delete comment {CommentId} by user {UserId}", id, userId);
-
                 // Check if the comment exists
                 if (!await _commentRepository.ExistsAsync(id))
                 {
-                    _logger.LogWarning("Comment {CommentId} not found for deletion", id);
                     return false;
                 }
-
                 // Check if the user is the owner of the comment
-                if (!await _commentRepository.IsOwnerAsync(id, userId))
+                if (!await _commentRepository.IsAuthorizedUserAsync(id, userId))
                 {
-                    _logger.LogWarning("User {UserId} attempted to delete comment {CommentId} but is not the owner",
-                        userId, id);
                     throw new UnauthorizedAccessException("You are not authorized to delete this comment.");
                 }
-
                 await _commentRepository.DeleteAsync(id);
-                _logger.LogInformation("Comment {CommentId} successfully deleted by user {UserId}", id, userId);
                 return true;
             }
             catch (UnauthorizedAccessException ex)

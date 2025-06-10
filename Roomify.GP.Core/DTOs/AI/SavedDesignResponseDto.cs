@@ -5,14 +5,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Roomify.GP.Core.DTOs.PortfolioPost
+namespace Roomify.GP.Core.DTOs.AI
 {
-    public class PortfolioPostResponseDto
+    public class SavedDesignResponseDto
     {
         public Guid Id { get; set; }
-        public string ImagePath { get; set; }
-        public string Description { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public string GeneratedImageUrl { get; set; }
+        public DateTime SavedAt { get; set; }
 
         // User data
         public Guid UserId { get; set; }
@@ -23,4 +22,4 @@ namespace Roomify.GP.Core.DTOs.PortfolioPost
         public List<CommentResponseDto> Comments { get; set; }
         public int LikesCount { get; set; }
     }
-}   
+}
