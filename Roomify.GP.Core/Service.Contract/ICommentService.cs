@@ -9,7 +9,7 @@ namespace Roomify.GP.Core.Service.Contract
 {
     public interface ICommentService
     {
-        Task<IEnumerable<CommentResponseDto>> GetAllByPostIdAsync(Guid postId);
+        Task<IEnumerable<CommentResponseDto>> GetAllAsync(Guid? postId, Guid? designId);
         Task<CommentResponseDto> GetByIdAsync(Guid id);
         Task<CommentResponseDto> AddAsync(Guid userId, CommentCreateDto commentDto);
         Task<CommentResponseDto> UpdateAsync(Guid id, Guid userId, CommentUpdateDto commentDto);

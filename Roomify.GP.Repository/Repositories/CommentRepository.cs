@@ -28,20 +28,20 @@ namespace Roomify.GP.Repository.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Comment>> GetAllBySavedDesignIdAsync(Guid designId)
+        {
+             return await _context.Comments
+                .Where(c => c.SavedDesignId == designId && !c.IsDeleted)
+                .Include(c => c.ApplicationUser)
+                .Include(c => c.SavedDesign)
+                .ToListAsync();
+        }
+
         public async Task<Comment> GetByIdAsync(Guid id)
         {
             return await _context.Comments
                 .Include(c => c.ApplicationUser)
-                .Include(c => c.PortfolioPost)
                 .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
-        }
-
-        public async Task<Comment> GetByIdWithOwnerCheckAsync(Guid id, Guid userId)
-        {
-            return await _context.Comments
-                .Include(c => c.ApplicationUser)
-                .Include(c => c.PortfolioPost)
-                .FirstOrDefaultAsync(c => c.Id == id && c.ApplicationUserId == userId && !c.IsDeleted);
         }
 
         public async Task AddAsync(Comment comment)
@@ -59,13 +59,11 @@ namespace Roomify.GP.Repository.Repositories
 
         public async Task DeleteAsync(Guid id)
         {
-            var comment = await _context.Comments.FindAsync(id);
-            if (comment != null)
-            {
-                // Soft delete
-                comment.IsDeleted = true;
-                comment.UpdatedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
+            var entity = await _context.Comments.FindAsync(id);
+            if (entity != null) 
+            { 
+                _context.Comments.Remove(entity); 
+                await _context.SaveChangesAsync(); 
             }
         }
 
@@ -76,14 +74,8 @@ namespace Roomify.GP.Repository.Repositories
 
         public async Task<bool> IsAuthorizedUserAsync(Guid commentId, Guid userId)
         {
-            var comment = await _context.Comments.FindAsync(commentId);
-            return comment != null && comment.ApplicationUserId == userId && !comment.IsDeleted;
-        }
-
-        public async Task<bool> IsOwnerAsync(Guid commentId, Guid userId)
-        {
             return await _context.Comments
                 .AnyAsync(c => c.Id == commentId && c.ApplicationUserId == userId && !c.IsDeleted);
-        }
+        } 
     }
-}
+}  

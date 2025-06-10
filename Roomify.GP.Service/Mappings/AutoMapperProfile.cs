@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
+using Roomify.GP.Core.DTOs.AI;
 using Roomify.GP.Core.DTOs.ApplicationUser;
 using Roomify.GP.Core.DTOs.Comment;
+using Roomify.GP.Core.DTOs.Like;
 using Roomify.GP.Core.DTOs.PortfolioPost;
 using Roomify.GP.Core.DTOs.User;
 using Roomify.GP.Core.Entities;
+using Roomify.GP.Core.Entities.AI;
 using Roomify.GP.Core.Entities.Identity;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -20,30 +23,28 @@ namespace Roomify.GP.Service.Mappings
                 .ForMember(dest => dest.Roles, opt => opt.Ignore())
                 .ForMember(dest => dest.EmailConfirmed, opt => opt.MapFrom(src => src.EmailConfirmed));
 
-            CreateMap<PortfolioPostDto, PortfolioPost>()
-                .ForMember(dest => dest.ImagePath, options => options.Ignore())
-                .ForMember(dest => dest.Id, options => options.Ignore())
-                .ForMember(dest => dest.CreatedAt, options => options.Ignore())
-                .ForMember(dest => dest.ApplicationUser, options => options.Ignore());
-
+            CreateMap<PortfolioPostDto, PortfolioPost>();
             CreateMap<PortfolioPost, PortfolioPostResponseDto>()
-                .ForMember(dest => dest.OwnerUserName, opt => opt.MapFrom(src => src.ApplicationUser.UserName))
-                .ForMember(dest => dest.OwnerProfilePicture, opt => opt.MapFrom(src => src.ApplicationUser.ProfilePicture));
+                .ForMember(d => d.UserId, opt => opt.MapFrom(src => src.ApplicationUserId))
+                .ForMember(d => d.UserName, opt => opt.MapFrom(src => src.ApplicationUser.UserName))
+                .ForMember(d => d.UserProfilePicture, opt => opt.MapFrom(src => src.ApplicationUser.ProfilePicture))
+                .ForMember(d => d.Comments, opt => opt.MapFrom(src => src.Comments))
+                .ForMember(d => d.LikesCount, opt => opt.MapFrom(src => src.Likes.Count));
 
-            // Comment mappings
-            CreateMap<CommentCreateDto, Comment>()
-                .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
-                .ForMember(dest => dest.ApplicationUserId, opt => opt.Ignore())
-                .ForMember(dest => dest.ApplicationUser, opt => opt.Ignore())
-                .ForMember(dest => dest.PortfolioPost, opt => opt.Ignore());
+            CreateMap<SavedDesign, SavedDesignResponseDto>()
+                .ForMember(d => d.UserId, opt => opt.MapFrom(src => src.ApplicationUserId))
+                .ForMember(d => d.UserName, opt => opt.MapFrom(src => src.ApplicationUser.FullName))
+                .ForMember(d => d.UserProfilePicture, opt => opt.MapFrom(src => src.ApplicationUser.ProfilePicture))
+                .ForMember(d => d.Comments, opt => opt.MapFrom(src => src.Comments))
+                .ForMember(d => d.LikesCount, opt => opt.MapFrom(src => src.Likes.Count));
 
+            CreateMap<CommentCreateDto, Comment>().ForMember(dest => dest.ApplicationUserId,opt => opt.MapFrom(src => src.UserId)); ;
             CreateMap<Comment, CommentResponseDto>()
-                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.ApplicationUserId))
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.ApplicationUser.UserName))
-                .ForMember(dest => dest.UserProfilePicture, opt => opt.MapFrom(src => src.ApplicationUser.ProfilePicture));
+                .ForMember(d => d.UserId, opt => opt.MapFrom(src => src.ApplicationUserId))
+                .ForMember(d => d.UserName, opt => opt.MapFrom(src => src.ApplicationUser.UserName))
+                .ForMember(d => d.UserProfilePicture, opt => opt.MapFrom(src => src.ApplicationUser.ProfilePicture));
+
+            CreateMap<Like, LikeDto>();
         }
     }
 }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Roomify.GP.Core.Entities.AI
 {
-    public class SavedDesign
+    public class SavedDesign 
     {
         public Guid Id { get; set; }
         public string GeneratedImageUrl { get; set; }
@@ -16,5 +16,11 @@ namespace Roomify.GP.Core.Entities.AI
         // Navigational Property
         public Guid ApplicationUserId { get; set; }
         public virtual ApplicationUser ApplicationUser { get; set; }
+
+        // Comments on saved designs
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+        // Likes on saved designs
+        public ICollection<Like> Likes { get; set; } = new List<Like>();
     }
 }
