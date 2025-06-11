@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Roomify.GP.Core.Entities;
 using Roomify.GP.Core.Entities.AI;
 using Roomify.GP.Core.Repositories.Contract;
 using Roomify.GP.Repository.Data.Contexts;
@@ -18,6 +19,36 @@ namespace Roomify.GP.Repository.Repositories
         {
             _context = context;
         }
+         
+
+        public async Task<List<SavedDesign>> GetAllWithUserInfoAsync()
+        {
+            return await _context.SavedDesigns
+                .Include(s => s.ApplicationUser)
+                .Include(d => d.Comments)
+                .Include(d => d.Likes)
+                .ToListAsync();
+        }
+
+        public async Task<List<SavedDesign>> GetByUserIdWithUserInfoAsync(Guid userId)
+        {
+            return await _context.SavedDesigns
+                .Where(s => s.ApplicationUserId == userId)
+                .Include(s => s.ApplicationUser)
+                .Include(d => d.Comments)
+                .Include(d => d.Likes)
+                .ToListAsync();
+        }
+
+        public async Task<SavedDesign> GetByIdWithUserInfoAsync(Guid id)
+        {
+            return await _context.SavedDesigns
+                .Include(s => s.ApplicationUser)
+                .Include(d => d.Comments)
+                .Include(d => d.Likes)
+                .FirstOrDefaultAsync(s => s.Id == id);
+        }
+
 
         public async Task AddAsync(SavedDesign entity)
         {
@@ -25,11 +56,41 @@ namespace Roomify.GP.Repository.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<SavedDesign>> GetByUserIdAsync(Guid userId)
+        public async Task DeleteAsync(Guid id)
         {
-            return await _context.SavedDesigns
-                .Where(s => s.ApplicationUserId == userId)
+            var entity = await _context.SavedDesigns.FindAsync(id);
+            if (entity != null)
+            { 
+                _context.SavedDesigns.Remove(entity); 
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<IEnumerable<Comment>> GetAllCommentsAsync(Guid designId)
+        {
+            return await _context.Comments
+                .Where(c => c.SavedDesignId == designId && !c.IsDeleted)
+                .Include(c => c.ApplicationUser)
                 .ToListAsync();
         }
+
+        public async Task<bool> LikeExistsAsync(Guid designId, Guid userId)
+        {
+            return await _context.Likes.AnyAsync(l => l.SavedDesignId == designId && l.ApplicationUserId == userId);
+        }
+
+        public async Task AddLikeAsync(Like like)
+        {
+            await _context.Likes.AddAsync(like);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveLikeAsync(Guid designId, Guid userId)
+        {
+            var like = await _context.Likes.FirstOrDefaultAsync(l => l.SavedDesignId == designId && l.ApplicationUserId == userId);
+            if (like != null) { _context.Likes.Remove(like); await _context.SaveChangesAsync(); }
+        }
+
+        public async Task<int> GetLikesCountAsync(Guid designId) => await _context.Likes.CountAsync(l => l.SavedDesignId == designId);
     }
 }

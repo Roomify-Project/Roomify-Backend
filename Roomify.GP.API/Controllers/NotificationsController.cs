@@ -6,9 +6,9 @@ using System.Security.Claims;
 
 namespace Roomify.GP.API.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class NotificationsController : ControllerBase
     {
         private readonly INotificationService _notificationService;

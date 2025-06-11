@@ -6,45 +6,80 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
+using Roomify.GP.Core.DTOs.AI;
+using Roomify.GP.Core.DTOs.Like;
 
 namespace Roomify.GP.Service.Services
 {
     public class PortfolioPostService : IPortfolioPostService
     {
-        private readonly IPortfolioPostRepository _repo;
+        private readonly IPortfolioPostRepository _portfolioPostRepository;
+        private readonly ISavedDesignRepository _savedDesignRepository;
+        private readonly IMapper _mapper;
 
-        public PortfolioPostService(IPortfolioPostRepository repo)
+        public PortfolioPostService(IPortfolioPostRepository portfolioPostRepository, ISavedDesignRepository savedDesignRepository, IMapper mapper)
         {
-            _repo = repo;
+            _portfolioPostRepository = portfolioPostRepository;
+            _savedDesignRepository = savedDesignRepository;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<PortfolioPostResponseDto>> GetAllAsync()
+        public async Task<(IEnumerable<PortfolioPostResponseDto>, IEnumerable<SavedDesignResponseDto>)> GetAllCombinedAsync()
         {
-            var posts = await _repo.GetAllAsync();
-            return posts.Select(post => MapToResponseDto(post));
+            var posts = (await _portfolioPostRepository.GetAllAsync()).Select(p => _mapper.Map<PortfolioPostResponseDto>(p));
+            var designs = (await _savedDesignRepository.GetAllWithUserInfoAsync()).Select(d => _mapper.Map<SavedDesignResponseDto>(d));
+            return (posts, designs);
         }
 
         public async Task<IEnumerable<PortfolioPostResponseDto>> GetByUserIdAsync(Guid userId)
         {
-            var posts = await _repo.GetByUserIdAsync(userId);
+            var posts = await _portfolioPostRepository.GetByUserIdAsync(userId);
             return posts.Select(post => MapToResponseDto(post));
+        }
+
+        public async Task<(string Type, object Data)> GetByIdCombinedAsync(Guid id)
+        {
+            var post = await _portfolioPostRepository.GetByIdAsync(id);
+            if (post != null) return ("Post", _mapper.Map<PortfolioPostResponseDto>(post));
+            var design = await _savedDesignRepository.GetByIdWithUserInfoAsync(id);
+            if (design != null) return ("Design", _mapper.Map<SavedDesignResponseDto>(design));
+            throw new KeyNotFoundException();
         }
 
         public async Task<PortfolioPostResponseDto> GetByIdAsync(Guid id)
         {
-            var post = await _repo.GetByIdAsync(id);
+            var post = await _portfolioPostRepository.GetByIdAsync(id);
             return post == null ? null : MapToResponseDto(post);
         }
 
         public async Task AddAsync(Guid userId, PortfolioPost post)
         {
-            await _repo.AddAsync(userId, post);
+            await _portfolioPostRepository.AddAsync(userId, post);
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            await _repo.DeleteAsync(id);
+            await _portfolioPostRepository.DeleteAsync(id);
         }
+
+        public async Task<LikeDto> AddLikeAsync(Guid id, bool isPost, Guid userId)
+        {
+            var exists = isPost ? await _portfolioPostRepository.LikeExistsAsync(id, userId)
+                                : await _savedDesignRepository.LikeExistsAsync(id, userId);
+            if (exists) throw new ApplicationException("Already liked");
+            var like = new Like { ApplicationUserId = userId, PortfolioPostId = isPost ? id : (Guid?)null, SavedDesignId = isPost ? (Guid?)null : id };
+            if (isPost) await _portfolioPostRepository.AddLikeAsync(like);
+            else await _savedDesignRepository.AddLikeAsync(like);
+            return _mapper.Map<LikeDto>(like);
+        }
+
+        public async Task RemoveLikeAsync(Guid id, bool isPost, Guid userId)
+        {
+            if (isPost) await _portfolioPostRepository.RemoveLikeAsync(id, userId);
+            else await _savedDesignRepository.RemoveLikeAsync(id, userId);
+        }
+
 
         private PortfolioPostResponseDto MapToResponseDto(PortfolioPost post)
         {
@@ -54,9 +89,9 @@ namespace Roomify.GP.Service.Services
                 ImagePath = post.ImagePath,
                 Description = post.Description,
                 CreatedAt = post.CreatedAt,
-                ApplicationUserId = post.ApplicationUserId,
-                OwnerUserName = post.ApplicationUser?.UserName,
-                OwnerProfilePicture = post.ApplicationUser?.ProfilePicture
+                UserId = post.ApplicationUserId,
+                UserName = post.ApplicationUser?.UserName,
+                UserProfilePicture = post.ApplicationUser?.ProfilePicture
             };
         }
     }

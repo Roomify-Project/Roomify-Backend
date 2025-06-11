@@ -9,9 +9,9 @@ using Roomify.GP.Core.DTOs.GenerateDesign;
 
 namespace Roomify.GP.API.Controllers
 {
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize]
     public class RoomImageController : ControllerBase
     {
         private readonly IRoomImageService _roomImageService;
@@ -180,8 +180,17 @@ namespace Roomify.GP.API.Controllers
         {
             try
             {
-                var savedDesigns = await _roomImageService.GetUserSavedDesignsAsync(userId);
-                return Ok(new { Status = "Success", SavedDesigns = savedDesigns });
+                var savedDesigns = await _roomImageService.GetUserSavedDesignsWithUserInfoAsync(userId);
+                return Ok(new { Status = "Success", SavedDesigns = savedDesigns.Select(sd => new
+                {
+                    Id = sd.Id,
+                    GeneratedImageUrl = sd.GeneratedImageUrl,
+                    SavedAt = sd.SavedAt,
+                    UserId = sd.ApplicationUserId,
+                    UserFullName = sd.ApplicationUser?.FullName,
+                    UserProfilePicture = sd.ApplicationUser?.ProfilePicture
+                })
+                });
             }
             catch (Exception ex)
             {

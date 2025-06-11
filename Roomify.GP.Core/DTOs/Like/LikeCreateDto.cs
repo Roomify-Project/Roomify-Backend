@@ -4,14 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Roomify.GP.Core.DTOs.Comment
+namespace Roomify.GP.Core.DTOs.Like
 {
-    public class CommentCreateDto
+    public class LikeCreateDto
     {
-        public string Content { get; set; }
-        public Guid UserId { get; set; }
+        public Guid UserId { get; set; }  
         public Guid? PortfolioPostId { get; set; }
         public Guid? SavedDesignId { get; set; }
-
     }
 }
