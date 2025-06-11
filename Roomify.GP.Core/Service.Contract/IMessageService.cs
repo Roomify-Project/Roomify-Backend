@@ -10,7 +10,5 @@ namespace Roomify.GP.Core.Service.Contract
         Task<string?> SaveMessageAsync(ChatModel chatModel);
         Task<MessageResponseDto> SaveMessageAndReturnAsync(ChatModel chatModel);
         Task<List<ChatPreviewDto>> GetAllChatsAsync(string userId);
-
-
     }
 }

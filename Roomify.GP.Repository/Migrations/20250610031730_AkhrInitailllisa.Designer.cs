@@ -12,8 +12,8 @@ using Roomify.GP.Repository.Data.Contexts;
 namespace Roomify.GP.Repository.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250527004532_historyFKfix")]
-    partial class historyFKfix
+    [Migration("20250610031730_AkhrInitailllisa")]
+    partial class AkhrInitailllisa
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -31,9 +31,15 @@ namespace Roomify.GP.Repository.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AttachmentUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<Guid>("ReceiverId")
                         .HasColumnType("uniqueidentifier");
@@ -325,7 +331,10 @@ namespace Roomify.GP.Repository.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("PortfolioPostId")
+                    b.Property<Guid?>("PortfolioPostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("SavedDesignId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -336,6 +345,8 @@ namespace Roomify.GP.Repository.Migrations
                     b.HasIndex("ApplicationUserId");
 
                     b.HasIndex("PortfolioPostId");
+
+                    b.HasIndex("SavedDesignId");
 
                     b.ToTable("Comments");
                 });
@@ -520,6 +531,66 @@ namespace Roomify.GP.Repository.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UserConnections");
+                });
+
+            modelBuilder.Entity("Roomify.GP.Core.Entities.Like", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ApplicationUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("PortfolioPostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("SavedDesignId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("PortfolioPostId");
+
+                    b.HasIndex("SavedDesignId");
+
+                    b.ToTable("Likes");
+                });
+
+            modelBuilder.Entity("Roomify.GP.Core.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("RecipientUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("RelatedEntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.OtpCode", b =>
@@ -711,14 +782,20 @@ namespace Roomify.GP.Repository.Migrations
                         .IsRequired();
 
                     b.HasOne("Roomify.GP.Core.Entities.PortfolioPost", "PortfolioPost")
-                        .WithMany()
+                        .WithMany("Comments")
                         .HasForeignKey("PortfolioPostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Roomify.GP.Core.Entities.AI.SavedDesign", "SavedDesign")
+                        .WithMany("Comments")
+                        .HasForeignKey("SavedDesignId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("ApplicationUser");
 
                     b.Navigation("PortfolioPost");
+
+                    b.Navigation("SavedDesign");
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.Identity.EmailConfirmationToken", b =>
@@ -735,6 +812,31 @@ namespace Roomify.GP.Repository.Migrations
                     b.Navigation("PendingRegistration");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Roomify.GP.Core.Entities.Like", b =>
+                {
+                    b.HasOne("Roomify.GP.Core.Entities.Identity.ApplicationUser", "ApplicationUser")
+                        .WithMany()
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Roomify.GP.Core.Entities.PortfolioPost", "PortfolioPost")
+                        .WithMany("Likes")
+                        .HasForeignKey("PortfolioPostId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Roomify.GP.Core.Entities.AI.SavedDesign", "SavedDesign")
+                        .WithMany("Likes")
+                        .HasForeignKey("SavedDesignId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ApplicationUser");
+
+                    b.Navigation("PortfolioPost");
+
+                    b.Navigation("SavedDesign");
                 });
 
             modelBuilder.Entity("Roomify.GP.Core.Entities.OtpCode", b =>
@@ -790,11 +892,25 @@ namespace Roomify.GP.Repository.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Roomify.GP.Core.Entities.AI.SavedDesign", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("Likes");
+                });
+
             modelBuilder.Entity("Roomify.GP.Core.Entities.Identity.ApplicationUser", b =>
                 {
                     b.Navigation("Followers");
 
                     b.Navigation("Following");
+                });
+
+            modelBuilder.Entity("Roomify.GP.Core.Entities.PortfolioPost", b =>
+                {
+                    b.Navigation("Comments");
+
+                    b.Navigation("Likes");
                 });
 #pragma warning restore 612, 618
         }

@@ -11,7 +11,7 @@ using System.Security.Claims;
 
 namespace Roomify.GP.API.Controllers
 {
-    [Authorize(Roles = "NormalUser,InteriorDesigner")]
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
