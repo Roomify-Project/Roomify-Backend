@@ -5,6 +5,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<GenerateDocumentationFile>False</GenerateDocumentationFile>
+		<EnableDefaultContentItems>false</EnableDefaultContentItems>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -12,11 +13,6 @@
 		<Content Remove="wwwroot\**" />
 		<EmbeddedResource Remove="wwwroot\**" />
 		<None Remove="wwwroot\**" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Content Remove="appsetting.json" />
-		<Content Remove="Properties\appsettings.json" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -34,10 +30,13 @@
 		<ProjectReference Include="..\Roomify.GP.Service\Roomify.GP.Service.csproj" />
 	</ItemGroup>
 
-	<!-- ✅ Add this to ensure web.config is copied to output directory -->
+	<!-- ✅ Ensure config files are copied to output during publish -->
 	<ItemGroup>
 		<Content Include="web.config">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="appsettings.Production.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
 
