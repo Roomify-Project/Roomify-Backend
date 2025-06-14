@@ -21,5 +21,6 @@ namespace Roomify.GP.Core.DTOs.AI
         // Social features
         public List<CommentResponseDto> Comments { get; set; }
         public int LikesCount { get; set; }
+        public bool IsLiked { get; set; }
     }
 }

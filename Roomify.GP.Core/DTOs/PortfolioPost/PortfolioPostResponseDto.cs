@@ -22,5 +22,8 @@ namespace Roomify.GP.Core.DTOs.PortfolioPost
         // Social features
         public List<CommentResponseDto> Comments { get; set; }
         public int LikesCount { get; set; }
+        public bool IsLiked { get; set; }
+
+
     }
 }   

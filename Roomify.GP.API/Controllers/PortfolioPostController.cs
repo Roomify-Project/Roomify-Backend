@@ -10,6 +10,7 @@ using Roomify.GP.Core.Entities;
 using Roomify.GP.Core.Entities.Identity;
 using Roomify.GP.Core.Service.Contract;
 using Roomify.GP.Service.Services;
+using System.Security.Claims;
 
 namespace Roomify.GP.API.Controllers
 {
@@ -35,13 +36,20 @@ namespace Roomify.GP.API.Controllers
             _roomImageService = roomImageService;
         }
 
+        private Guid GetCurrentUserId()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return Guid.TryParse(userId, out var guid) ? guid : Guid.Empty;
+        }
+
         [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
-        [HttpGet]      // GET api/portfolio
+        [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             try
             {
-                var (posts, designs) = await _portfolioPostService.GetAllCombinedAsync();
+                var userId = GetCurrentUserId();
+                var (posts, designs) = await _portfolioPostService.GetAllCombinedAsync(userId);
                 return Ok(new { PortfolioPosts = posts, SavedDesigns = designs });
             }
             catch (Exception ex)
@@ -51,14 +59,14 @@ namespace Roomify.GP.API.Controllers
             }
         }
 
-
         [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
-        [HttpGet("{id}")]   // GET api/portfolio/{id}
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
             try
             {
-                var result = await _portfolioPostService.GetByIdCombinedAsync(id);
+                var userId = GetCurrentUserId();
+                var result = await _portfolioPostService.GetByIdCombinedAsync(id, userId);
                 return Ok(new { Type = result.Type, Data = result.Data });
             }
             catch (KeyNotFoundException)
@@ -72,7 +80,6 @@ namespace Roomify.GP.API.Controllers
             }
         }
 
-
         [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
         [HttpGet("by-user/{userId}")]
         public async Task<IActionResult> GetByUser(Guid userId)
@@ -82,9 +89,8 @@ namespace Roomify.GP.API.Controllers
             return Ok(response);
         }
 
-
         [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
-        [HttpPost("upload/{userId}")]      // POST api/portfolio/upload/{userId}
+        [HttpPost("upload/{userId}")]
         public async Task<IActionResult> Upload(Guid userId, [FromForm] PortfolioPostDto portfolioPostDto)
         {
             if (userId == Guid.Empty)
@@ -134,11 +140,10 @@ namespace Roomify.GP.API.Controllers
             }
         }
 
-
         [ProducesResponseType(typeof(IActionResult), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
-        [HttpDelete("{id}")]     // DELETE api/portfolio/{id}
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
             if (id == Guid.Empty)
@@ -154,18 +159,13 @@ namespace Roomify.GP.API.Controllers
             }
             catch (ApplicationException ex)
             {
-                // Log or continue, image deletion failure shouldn't block post deletion
                 return Ok(new { message = "Post deleted, but image deletion failed", details = ex.Message });
             }
 
             await _portfolioPostService.DeleteAsync(id);
-
             return Ok(new { message = "Post and image deleted successfully." });
         }
 
-
-
-        // POST api/portfolio/{id}/likes?isPost=true&userId={userId}
         [HttpPost("{id}/likes")]
         public async Task<IActionResult> Like(Guid id, [FromQuery] bool isPost, [FromQuery] Guid userId)
         {
@@ -180,7 +180,6 @@ namespace Roomify.GP.API.Controllers
             }
         }
 
-        // DELETE api/portfolio/{id}/likes?isPost=true&userId={userId}
         [HttpDelete("{id}/likes")]
         public async Task<IActionResult> Unlike(Guid id, [FromQuery] bool isPost, [FromQuery] Guid userId)
         {
