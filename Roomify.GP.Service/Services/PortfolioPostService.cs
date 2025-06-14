@@ -34,8 +34,7 @@ namespace Roomify.GP.Service.Services
 
             foreach (var post in posts)
             {
-                var dto = MapToResponseDto(post);
-                dto.IsLiked = await _portfolioPostRepository.LikeExistsAsync(post.Id, userId);
+                var dto = await MapToResponseDtoAsync(post, userId);
                 mappedPosts.Add(dto);
             }
 
@@ -50,8 +49,7 @@ namespace Roomify.GP.Service.Services
 
             foreach (var post in posts)
             {
-                var dto = MapToResponseDto(post);
-                dto.IsLiked = await _portfolioPostRepository.LikeExistsAsync(post.Id, userId);
+                var dto = await MapToResponseDtoAsync(post, userId);
                 responseList.Add(dto);
             }
 
@@ -63,8 +61,7 @@ namespace Roomify.GP.Service.Services
             var post = await _portfolioPostRepository.GetByIdAsync(id);
             if (post != null)
             {
-                var dto = MapToResponseDto(post);
-                dto.IsLiked = await _portfolioPostRepository.LikeExistsAsync(post.Id, userId);
+                var dto = await MapToResponseDtoAsync(post, userId);
                 return ("Post", dto);
             }
 
@@ -82,7 +79,7 @@ namespace Roomify.GP.Service.Services
         public async Task<PortfolioPostResponseDto> GetByIdAsync(Guid id)
         {
             var post = await _portfolioPostRepository.GetByIdAsync(id);
-            return post == null ? null : MapToResponseDto(post);
+            return post == null ? null : await MapToResponseDtoAsync(post, Guid.Empty); // مفيش userId هنا
         }
 
         public async Task AddAsync(Guid userId, PortfolioPost post)
@@ -127,7 +124,7 @@ namespace Roomify.GP.Service.Services
                 await _savedDesignRepository.RemoveLikeAsync(id, userId);
         }
 
-        private PortfolioPostResponseDto MapToResponseDto(PortfolioPost post)
+        private async Task<PortfolioPostResponseDto> MapToResponseDtoAsync(PortfolioPost post, Guid userId)
         {
             return new PortfolioPostResponseDto
             {
@@ -137,8 +134,8 @@ namespace Roomify.GP.Service.Services
                 CreatedAt = post.CreatedAt,
                 UserId = post.ApplicationUserId,
                 UserName = post.ApplicationUser?.UserName,
-                UserProfilePicture = post.ApplicationUser?.ProfilePicture
-                // IsLiked will be assigned externally
+                UserProfilePicture = post.ApplicationUser?.ProfilePicture,
+                IsLiked = userId != Guid.Empty && await _portfolioPostRepository.LikeExistsAsync(post.Id, userId)
             };
         }
     }
