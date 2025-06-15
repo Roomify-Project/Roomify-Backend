@@ -51,7 +51,7 @@ namespace Roomify.GP.API.Controllers
                 var fullPrompt = $"<interiorx>{request.DescriptionText} in {request.RoomType} with {request.RoomStyle} style, professional interior design, realistic lighting, detailed furniture and decor, photorealistic, 8K resolution, well-composed shot, interior design magazine quality";
 
                 // Use Azure model instead of Replicate
-                var designUrls = await GenerateDesignsUsingAzure(request.Image, fullPrompt, 1);
+                var designUrls = await GenerateDesignsUsingAzure(request.Image, fullPrompt, 3);
 
                 var historyResults = new List<AIResultHistory>();
                 if (request.SaveToHistory && request.UserId != Guid.Empty)
@@ -74,7 +74,7 @@ namespace Roomify.GP.API.Controllers
                     OriginalRoomImage = imageUrl,
                     Status = "Success",
                     GeneratedImageUrls = designUrls,
-                    HistoryResults = historyResults.Select(h => new { h.Id, h.GeneratedImageUrl })
+                    HistoryResults = historyResults.Select(h => new { h.Id, h.GeneratedImageUrl})
                 });
             }
             catch (Exception ex)
@@ -102,7 +102,7 @@ namespace Roomify.GP.API.Controllers
                 var imageBytes = await _httpClient.GetByteArrayAsync(originalImageUrl);
                 var imageFile = new CustomFormFile(new MemoryStream(imageBytes), "image.jpg", "image/jpeg");
 
-                var designs = await GenerateDesignsUsingAzure(imageFile, fullPrompt, 1);
+                var designs = await GenerateDesignsUsingAzure(imageFile, fullPrompt, 3);
 
                 var historyResults = new List<AIResultHistory>();
                 if (saveToHistory && userId != Guid.Empty)
