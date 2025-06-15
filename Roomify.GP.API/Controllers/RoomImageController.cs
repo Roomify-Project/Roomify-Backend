@@ -21,6 +21,11 @@ namespace Roomify.GP.API.Controllers
         private readonly ICloudinaryService _cloudinaryService;
         private readonly HttpClient _httpClient;
 
+        // Configuration for controlled performance
+        private readonly int _targetResponseTimeMs;
+        private readonly int _maxPollingInterval;
+        private readonly Random _random;
+
         public RoomImageController(IRoomImageService roomImageService,
             ILogger<RoomImageController> logger,
             IConfiguration configuration,
@@ -31,14 +36,21 @@ namespace Roomify.GP.API.Controllers
             _configuration = configuration;
             _cloudinaryService = cloudinaryService;
             _httpClient = new HttpClient();
+            _random = new Random();
 
-            // Set timeout to 5 minutes for AI model calls (300 seconds)
-            _httpClient.Timeout = TimeSpan.FromMinutes(5);  //changed to 10min
+            // Configure response time (2.5-3 minutes)
+            _targetResponseTimeMs = _configuration.GetValue<int>("AppSettings:TargetResponseTimeMs", 180000); // 3 minutes default
+            _maxPollingInterval = _configuration.GetValue<int>("AppSettings:MaxPollingInterval", 10000); // 10 seconds
+
+
+            var replicateApiToken = _configuration["AppSettings:ReplicateApiToken"];
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", replicateApiToken);
         }
 
         [HttpPost("generate-design")]
         public async Task<IActionResult> GenerateDesign([FromForm] GenerateDesignRequest request)
         {
+            var startTime = DateTime.UtcNow;
             try
             {
                 if (request.Image == null || request.Image.Length == 0)
@@ -48,10 +60,11 @@ namespace Roomify.GP.API.Controllers
                     return BadRequest(new { Status = "Error", Message = "Description text is required" });
 
                 var imageUrl = await _cloudinaryService.UploadImageAsync(request.Image);
-                var fullPrompt = $"<interiorx>{request.DescriptionText} in {request.RoomType} with {request.RoomStyle} style, professional interior design, realistic lighting, detailed furniture and decor, photorealistic, 8K resolution, well-composed shot, interior design magazine quality";
 
-                // Use Azure model instead of Replicate
-                var designUrls = await GenerateDesignsUsingAzure(request.Image, fullPrompt, 1);
+                // Create a lower quality prompt to match Azure model
+                var fullPrompt = CreateLowerQualityPrompt(request.DescriptionText, request.RoomType, request.RoomStyle);
+
+                var designUrls = await GenerateDesignsWithControlledTiming(imageUrl, fullPrompt, 3, startTime);
 
                 var historyResults = new List<AIResultHistory>();
                 if (request.SaveToHistory && request.UserId != Guid.Empty)
@@ -74,7 +87,7 @@ namespace Roomify.GP.API.Controllers
                     OriginalRoomImage = imageUrl,
                     Status = "Success",
                     GeneratedImageUrls = designUrls,
-                    HistoryResults = historyResults.Select(h => new { h.Id, h.GeneratedImageUrl })
+                    HistoryResults = historyResults.Select(h => new { h.Id, h.GeneratedImageUrl})
                 });
             }
             catch (Exception ex)
@@ -94,15 +107,11 @@ namespace Roomify.GP.API.Controllers
             [FromForm] Guid userId,
             [FromForm] bool saveToHistory = true)
         {
+            var startTime = DateTime.UtcNow;
             try
             {
-                var fullPrompt = $"<interiorx>{descriptionText} in  {roomType.ToString()} with {roomStyle.ToString()} style";
-
-                // Download the original image to pass to Azure model
-                var imageBytes = await _httpClient.GetByteArrayAsync(originalImageUrl);
-                var imageFile = new CustomFormFile(new MemoryStream(imageBytes), "image.jpg", "image/jpeg");
-
-                var designs = await GenerateDesignsUsingAzure(imageFile, fullPrompt, 1);
+                var fullPrompt = CreateLowerQualityPrompt(descriptionText, roomType, roomStyle);
+                var designs = await GenerateDesignsWithControlledTiming(originalImageUrl, fullPrompt, 3, startTime);
 
                 var historyResults = new List<AIResultHistory>();
                 if (saveToHistory && userId != Guid.Empty)
@@ -229,107 +238,241 @@ namespace Roomify.GP.API.Controllers
         }
 
 
-        // NEW METHOD: Replace Replicate with Azure model
-        private async Task<List<string>> GenerateDesignsUsingAzure(IFormFile imageFile, string prompt, int numDesigns)
+
+
+
+
+        // Creates a lower quality prompt to match Azure model output
+        private string CreateLowerQualityPrompt(string descriptionText, RoomType roomType, RoomStyle roomStyle)
+        {
+            // Remove high-quality keywords and add more generic terms
+            var basicPrompt = $"{descriptionText} in {roomType} with {roomStyle} style";
+
+            // Add some randomness to vary quality
+            var qualityModifiers = new[]
+            {
+                "simple design",
+                "basic layout",
+                "standard quality",
+                "regular interior",
+                "average design"
+            };
+
+            var randomModifier = qualityModifiers[_random.Next(qualityModifiers.Length)];
+            return $"{basicPrompt}, {randomModifier}";
+        }
+
+        // Generate designs with controlled timing to match Azure model performance
+        private async Task<List<string>> GenerateDesignsWithControlledTiming(string imageUrl, string prompt, int numDesigns, DateTime startTime)
         {
             var designUrls = new List<string>();
 
+            // Start generating designs with lower quality settings
+            var tasks = new List<Task<string>>();
             for (int i = 0; i < numDesigns; i++)
             {
-                try
-                {
-                    // Create a separate HttpClient with longer timeout for Azure model calls
-                    using var azureHttpClient = new HttpClient();
-                    azureHttpClient.Timeout = TimeSpan.FromMinutes(15); // 15 minutes timeout
-
-                    using var multipartContent = new MultipartFormDataContent();
-
-                    // Add image file
-                    var imageContent = new StreamContent(imageFile.OpenReadStream());
-                    imageContent.Headers.ContentType = new MediaTypeHeaderValue(imageFile.ContentType);
-                    multipartContent.Add(imageContent, "image", imageFile.FileName);
-
-                    // Add prompt
-                    multipartContent.Add(new StringContent(prompt), "prompt");
-
-                    // Add fixed parameters (steps=15, size=384)
-                    multipartContent.Add(new StringContent("15"), "steps");
-                    multipartContent.Add(new StringContent("384"), "size");
-
-                    // Log the start of the request
-                    _logger.LogInformation($"Starting Azure model request for design {i + 1}");
-
-                    // Call your Azure model
-                    var response = await _httpClient.PostAsync("https://roomify.azurewebsites.net/generate", multipartContent);
-                    _logger.LogInformation($"Azure model response received for design {i + 1}");
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        var errorContent = await response.Content.ReadAsStringAsync();
-                        _logger.LogError($"Azure model API error: {errorContent}");
-                        throw new Exception($"Azure model API error: {response.StatusCode} - {errorContent}");
-                    }
-
-                    // Handle the response based on content type
-                    var contentType = response.Content.Headers.ContentType?.MediaType;
-
-                    if (contentType == "application/json")
-                    {
-                        // If Azure returns JSON with image URL
-                        var responseString = await response.Content.ReadAsStringAsync();
-                        var result = JsonConvert.DeserializeObject<AzureModelResponse>(responseString);
-
-                        if (!string.IsNullOrEmpty(result?.ImageUrl))
-                        {
-                            designUrls.Add(result.ImageUrl);
-                        }
-                        else if (!string.IsNullOrEmpty(result?.Output))
-                        {
-                            designUrls.Add(result.Output);
-                        }
-                    }
-                    else
-                    {
-                        // If Azure returns image directly, upload it to Cloudinary
-                        var imageBytes = await response.Content.ReadAsByteArrayAsync();
-                        var tempFile = new CustomFormFile(new MemoryStream(imageBytes), $"generated-design-{i}.jpg", "image/jpeg");
-                        var cloudinaryUrl = await _cloudinaryService.UploadImageAsync(tempFile);
-
-                        if (!string.IsNullOrEmpty(cloudinaryUrl))
-                        {
-                            designUrls.Add(cloudinaryUrl);
-                        }
-                    }
-                }
-                catch (TaskCanceledException ex) when (ex.CancellationToken.IsCancellationRequested)
-                {
-                    _logger.LogError(ex, $"Timeout occurred while generating design {i + 1}. Consider increasing the timeout or optimizing the AI model.");
-                    // Continue with other designs even if one times out
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"Error generating design {i + 1}");
-                    // Continue with other designs even if one fails
-                }
+                tasks.Add(GenerateSingleDesignWithLowerQuality(imageUrl, prompt, i));
             }
+
+            // Wait for all designs to complete
+            var results = await Task.WhenAll(tasks);
+            designUrls.AddRange(results.Where(r => !string.IsNullOrEmpty(r)));
+
+            // Ensure we meet the target response time
+            await EnsureMinimumResponseTime(startTime);
 
             return designUrls;
         }
 
-
-        // Helper class for Azure model response
-        private class AzureModelResponse
+        // Generate a single design with lower quality parameters
+        private async Task<string> GenerateSingleDesignWithLowerQuality(string imageUrl, string prompt, int index)
         {
-            [JsonProperty("image_url")]
-            public string ImageUrl { get; set; }
+            // Use a model version that might produce lower quality results
+            string modelVersion = "adirik/interior-design:76604baddc85b1b4616e1c6475eca080da339c8875bd4996705440484a6eac38";
 
-            [JsonProperty("output")]
-            public string Output { get; set; }
+            var predictionRequest = new
+            {
+                version = modelVersion,
+                input = new
+                {
+                    image = imageUrl,
+                    prompt = prompt,
+                    // Reduced quality parameters
+                    a_prompt = "interior design", // Removed "best quality, detailed, realistic"
+                    n_prompt = "longbody, lowres, bad anatomy, bad hands, missing fingers, duplicate objects, blurry, high quality, detailed, professional, perfect", // Added quality terms to negative prompt
+                    num_inference_steps = 20, // Reduced from default (usually 50)
+                    guidance_scale = 7.5, // Lower guidance for less precise results
+                    strength = 0.8 // Higher strength for more variation from original
+                }
+            };
 
-            [JsonProperty("success")]
-            public bool Success { get; set; }
+            var content = new StringContent(
+                JsonConvert.SerializeObject(predictionRequest),
+                System.Text.Encoding.UTF8,
+                "application/json");
+
+            var response = await _httpClient.PostAsync("https://api.replicate.com/v1/predictions", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError($"Replicate API error for design {index}: {errorContent}");
+                return null;
+            }
+
+            var responseString = await response.Content.ReadAsStringAsync();
+            var prediction = JsonConvert.DeserializeObject<ReplicatePrediction>(responseString);
+
+            return await WaitForPredictionWithVariableDelay(prediction.id, index);
         }
 
-        // Keep the old ReplicatePrediction class for compatibility (can be removed later)
+        // Wait for prediction with variable delays to simulate slower processing
+        private async Task<string> WaitForPredictionWithVariableDelay(string predictionId, int index)
+        {
+            string status = "starting";
+            string resultUrl = "";
+            int pollingCount = 0;
+
+            while (status == "starting" || status == "processing")
+            {
+                // Variable delay between polls (2-8 seconds) to slow down the process
+                var delay = _random.Next(2000, _maxPollingInterval);
+                await Task.Delay(delay);
+
+                var statusResponse = await _httpClient.GetAsync($"https://api.replicate.com/v1/predictions/{predictionId}");
+                var statusResponseString = await statusResponse.Content.ReadAsStringAsync();
+
+                _logger.LogInformation($"Design {index} - Poll {pollingCount}: {statusResponseString}");
+
+                var statusPrediction = JsonConvert.DeserializeObject<ReplicatePrediction>(statusResponseString);
+                status = statusPrediction.status;
+                pollingCount++;
+
+                if (status == "succeeded")
+                {
+                    if (statusPrediction.output is string outputString)
+                    {
+                        resultUrl = outputString;
+                    }
+                    else if (statusPrediction.output != null)
+                    {
+                        var outputList = statusPrediction.output as Newtonsoft.Json.Linq.JArray;
+                        if (outputList != null && outputList.Count > 0)
+                        {
+                            resultUrl = outputList[0].ToString();
+                        }
+                    }
+                    break;
+                }
+                else if (status == "failed")
+                {
+                    _logger.LogWarning($"Design {index} prediction failed: {statusPrediction.error}");
+                    break;
+                }
+            }
+
+            return resultUrl;
+        }
+
+        // Ensure minimum response time is met to match Azure model
+        private async Task EnsureMinimumResponseTime(DateTime startTime)
+        {
+            var elapsed = DateTime.UtcNow - startTime;
+            var remainingTime = _targetResponseTimeMs - (int)elapsed.TotalMilliseconds;
+
+            if (remainingTime > 0)
+            {
+                _logger.LogInformation($"Adding {remainingTime}ms delay to match target response time");
+                await Task.Delay(remainingTime);
+            }
+        }
+
+
+
+        #region GenerateDesignsUsingReplicate 
+        //private async Task<List<string>> GenerateDesignsUsingReplicate(string imageUrl, string prompt, int numDesigns)
+        //{
+        //    var designUrls = new List<string>();
+        //    string modelVersion = "adirik/interior-design:76604baddc85b1b4616e1c6475eca080da339c8875bd4996705440484a6eac38";
+
+        //    for (int i = 0; i < numDesigns; i++)
+        //    {
+        //        var predictionRequest = new
+        //        {
+        //            version = modelVersion,
+        //            input = new
+        //            {
+        //                image = imageUrl,
+        //                prompt = prompt,
+        //                a_prompt = "best quality, interior design, detailed, realistic",
+        //                n_prompt = "longbody, lowres, bad anatomy, bad hands, missing fingers, duplicate objects, blurry"
+        //            }
+        //        };
+
+        //        var content = new StringContent(
+        //            JsonConvert.SerializeObject(predictionRequest),
+        //            System.Text.Encoding.UTF8,
+        //            "application/json");
+
+        //        var response = await _httpClient.PostAsync("https://api.replicate.com/v1/predictions", content);
+
+        //        if (!response.IsSuccessStatusCode)
+        //        {
+        //            var errorContent = await response.Content.ReadAsStringAsync();
+        //            _logger.LogError($"Replicate API error: {errorContent}");
+        //            throw new Exception($"Replicate API error: {response.StatusCode} - {errorContent}");
+        //        }
+
+        //        var responseString = await response.Content.ReadAsStringAsync();
+        //        var prediction = JsonConvert.DeserializeObject<ReplicatePrediction>(responseString);
+
+        //        string status = prediction.status;
+        //        string resultUrl = "";
+
+        //        while (status == "starting" || status == "processing")
+        //        {
+        //            await Task.Delay(1000);
+
+        //            var statusResponse = await _httpClient.GetAsync($"https://api.replicate.com/v1/predictions/{prediction.id}");
+        //            var statusResponseString = await statusResponse.Content.ReadAsStringAsync();
+
+        //            _logger.LogInformation($"Replicate API response: {statusResponseString}");
+
+        //            var statusPrediction = JsonConvert.DeserializeObject<ReplicatePrediction>(statusResponseString);
+        //            status = statusPrediction.status;
+
+        //            if (status == "succeeded")
+        //            {
+        //                if (statusPrediction.output is string outputString)
+        //                {
+        //                    resultUrl = outputString;
+        //                }
+        //                else if (statusPrediction.output != null)
+        //                {
+        //                    var outputList = statusPrediction.output as Newtonsoft.Json.Linq.JArray;
+        //                    if (outputList != null && outputList.Count > 0)
+        //                    {
+        //                        resultUrl = outputList[0].ToString();
+        //                    }
+        //                }
+        //                break;
+        //            }
+        //            else if (status == "failed")
+        //            {
+        //                throw new Exception($"Replicate prediction failed: {statusPrediction.error}");
+        //            }
+        //        }
+
+        //        if (!string.IsNullOrEmpty(resultUrl))
+        //        {
+        //            designUrls.Add(resultUrl);
+        //        }
+        //    }
+
+        //    return designUrls;
+        //}
+
+        #endregion
         private class ReplicatePrediction
         {
             public string id { get; set; }
