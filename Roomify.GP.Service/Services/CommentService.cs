@@ -162,8 +162,8 @@ namespace Roomify.GP.Service.Services
             {
                 Id = comment.Id,
                 Content = comment.Content,
-                CreatedAt = comment.CreatedAt,
-                UpdatedAt = comment.UpdatedAt,
+                CreatedAt = comment.CreatedAt.ToLocalTime(),
+                UpdatedAt = comment.UpdatedAt?.ToLocalTime(),
                 UserId = comment.ApplicationUserId,
                 UserName = comment.ApplicationUser?.UserName,
                 UserProfilePicture = comment.ApplicationUser?.ProfilePicture,
