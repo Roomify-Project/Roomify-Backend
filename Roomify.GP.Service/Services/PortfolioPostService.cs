@@ -2,13 +2,14 @@
 using Roomify.GP.Core.Repositories.Contract;
 using Roomify.GP.Core.Service.Contract;
 using Roomify.GP.Core.DTOs.PortfolioPost;
+using Roomify.GP.Core.DTOs.AI;
+using Roomify.GP.Core.DTOs.Like;
+using Roomify.GP.Core.DTOs.Comment;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
-using Roomify.GP.Core.DTOs.AI;
-using Roomify.GP.Core.DTOs.Like;
 
 namespace Roomify.GP.Service.Services
 {
@@ -18,7 +19,10 @@ namespace Roomify.GP.Service.Services
         private readonly ISavedDesignRepository _savedDesignRepository;
         private readonly IMapper _mapper;
 
-        public PortfolioPostService(IPortfolioPostRepository portfolioPostRepository, ISavedDesignRepository savedDesignRepository, IMapper mapper)
+        public PortfolioPostService(
+            IPortfolioPostRepository portfolioPostRepository,
+            ISavedDesignRepository savedDesignRepository,
+            IMapper mapper)
         {
             _portfolioPostRepository = portfolioPostRepository;
             _savedDesignRepository = savedDesignRepository;
@@ -31,7 +35,6 @@ namespace Roomify.GP.Service.Services
             var designs = await _savedDesignRepository.GetAllWithUserInfoAsync();
 
             var mappedPosts = new List<PortfolioPostResponseDto>();
-
             foreach (var post in posts)
             {
                 var dto = await MapToResponseDtoAsync(post, userId);
@@ -69,17 +72,17 @@ namespace Roomify.GP.Service.Services
             if (design != null)
             {
                 var dto = _mapper.Map<SavedDesignResponseDto>(design);
-                dto.IsLiked = await _savedDesignRepository.LikeExistsAsync(id, userId);
+                dto.IsLiked = userId != Guid.Empty && await _savedDesignRepository.LikeExistsAsync(id, userId);
                 return ("Design", dto);
             }
 
-            throw new KeyNotFoundException();
+            throw new KeyNotFoundException("Item not found.");
         }
 
         public async Task<PortfolioPostResponseDto> GetByIdAsync(Guid id)
         {
             var post = await _portfolioPostRepository.GetByIdAsync(id);
-            return post == null ? null : await MapToResponseDtoAsync(post, Guid.Empty); // مفيش userId هنا
+            return post == null ? null : await MapToResponseDtoAsync(post, Guid.Empty);
         }
 
         public async Task AddAsync(Guid userId, PortfolioPost post)
@@ -135,7 +138,19 @@ namespace Roomify.GP.Service.Services
                 UserId = post.ApplicationUserId,
                 UserName = post.ApplicationUser?.UserName,
                 UserProfilePicture = post.ApplicationUser?.ProfilePicture,
-                IsLiked = userId != Guid.Empty && await _portfolioPostRepository.LikeExistsAsync(post.Id, userId)
+                IsLiked = userId != Guid.Empty && await _portfolioPostRepository.LikeExistsAsync(post.Id, userId),
+                LikesCount = post.Likes?.Count ?? 0,
+                Comments = post.Comments?.Select(c => new CommentResponseDto
+                {
+                    Id = c.Id,
+                    Content = c.Content,
+                    CreatedAt = c.CreatedAt,
+                    UpdatedAt = c.UpdatedAt,
+                    UserId = c.ApplicationUserId,
+                    UserName = c.ApplicationUser?.UserName,
+                    UserProfilePicture = c.ApplicationUser?.ProfilePicture,
+                    PortfolioPostId = c.PortfolioPostId
+                }).ToList()
             };
         }
     }
