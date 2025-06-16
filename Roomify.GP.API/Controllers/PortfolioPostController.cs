@@ -21,7 +21,13 @@ public class PortfolioPostController : ControllerBase
     private readonly ILogger<PortfolioPostController> _logger;
     private readonly IRoomImageService _roomImageService;
 
-    public PortfolioPostController(IPortfolioPostService portfolioPostService, ICloudinaryService cloudinaryService, IMapper mapper, UserManager<ApplicationUser> userManager, ILogger<PortfolioPostController> logger, IRoomImageService roomImageService)
+    public PortfolioPostController(
+        IPortfolioPostService portfolioPostService,
+        ICloudinaryService cloudinaryService,
+        IMapper mapper,
+        UserManager<ApplicationUser> userManager,
+        ILogger<PortfolioPostController> logger,
+        IRoomImageService roomImageService)
     {
         _portfolioPostService = portfolioPostService;
         _cloudinaryService = cloudinaryService;
@@ -40,7 +46,7 @@ public class PortfolioPostController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var userId = GetCurrentUserId();
+        var userId = GetCurrentUserId(); // ✅ Use actual user ID
         var (posts, designs) = await _portfolioPostService.GetAllCombinedAsync(userId);
         return Ok(new { PortfolioPosts = posts, SavedDesigns = designs });
     }
@@ -50,7 +56,7 @@ public class PortfolioPostController : ControllerBase
     {
         try
         {
-            var userId = GetCurrentUserId();
+            var userId = GetCurrentUserId(); // ✅ Use actual user ID
             var result = await _portfolioPostService.GetByIdCombinedAsync(id, userId);
             return Ok(new { Type = result.Type, Data = result.Data });
         }

@@ -31,11 +31,13 @@ namespace Roomify.GP.Repository.Repositories
         public async Task<PortfolioPost> GetByIdAsync(Guid id)
         {
             return await _context.PortfolioPosts
-            .Include(p => p.ApplicationUser)
-            .Include(p => p.Comments)
-            .Include(p => p.Likes)
-            .FirstOrDefaultAsync(p => p.Id == id);
+                .Include(p => p.ApplicationUser)
+                .Include(p => p.Comments)
+                    .ThenInclude(c => c.ApplicationUser) // ✅ هنا الإضافة المهمة
+                .Include(p => p.Likes)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
+
 
         public async Task<IEnumerable<PortfolioPost>> GetByUserIdAsync(Guid userId)
         {
